@@ -51,10 +51,9 @@ Collected the missing data. Now I need the results you noted on paper to close o
 Merge the draft with the new data:
 - Replace all `[PENDING]` with real values
 - Add new Outputs/Outcomes from the weekend
-- Complete narrative sections ("What could be improved?", "What will I commit to improving?") if still pending
-- Adjust Sprint Planning if needed
+- Complete narrative sections if still pending
 
-Deliver the clean final document (no `[PENDING]`, no comments).
+Deliver the final document in the **same markdown format as the draft** (headers `#`/`##`/`###`, bullets `*`, tables with `:----`, numbered lists for priorities and outputs) — no `[PENDING]`, no comments, ready for copy/paste into Google Docs.
 
 ---
 
@@ -64,4 +63,4 @@ Ask only these 2 questions in one message:
 1. "Did anything get missed in **Outcomes** or **Outputs** from the weekend?"
 2. "Is the **week goal** and the **priority order** correct?"
 
-Incorporate feedback, deliver the final version ready to copy into your notes, and **delete** `~/sprint-wip.md`.
+Incorporate feedback, deliver the final version, and **delete** `~/sprint-wip.md`.

@@ -64,96 +64,133 @@ Base the blocks on the current time and any remaining calendar slots today.
 Generate the draft with data available so far.
 Mark incomplete fields with `[PENDING]`.
 
+**Use exactly this format** (ready for copy/paste into Google Docs):
+
+```
+# [D/Month] -------------------------------------
+
+## Sprint Review *([period], X workdays)*
+
+### Outcomes
+
+* [item]
+
+### Outputs
+
+**[Project]**
+
+* [item]
+
+**Personal**
+
+* [item]
+
+**Other**
+
+* [item]
+
+## Sprint Retrospective *([period], X workdays)*
+
+### Last week's improvement goals
+
+| Improvement | Result |
+| :---- | :---: |
+| Work +2h in important outputs | **[PENDING] / X** |
+| Spend 1+ hours OoH | **[PENDING] / X** |
+| Make impact | **[PENDING] / X** |
+
+### Health goals
+
+| Health | Result |
+| :---- | :---: |
+| Meditate | **[PENDING] / 7** |
+| Exercise | **[PENDING] / X** |
+| Bedtime | **[PENDING] / [previous goal]** |
+| Wake-up time | **[PENDING] / [previous goal]** |
+
+### What did I do well?
+
+* [bullet per item — focus on system/process improvements]
+
+### What could be improved?
+
+* [bullet per item]
+
+### What will I commit to improving?
+
+* [bullet per item]
+
+## Sprint Planning *([next period], X workdays)*
+
+### Week goal
+
+* [inferred from highest-priority open tasks]
+
+### Projects Priority
+
+1. [Project 1]
+2. [Project 2]
+3. [Project 3]
+
+**On my mind**
+
+4. [item]
+
+**On hold**
+
+5. [item]
+
+### Main Outputs
+
+[Use only TickTick `list_undone_tasks_by_date` for next week — do NOT use Calendar or GitHub.
+Group by project in Projects Priority order. Propose concrete outputs even when no dated tasks exist.
+Items are numbered sequentially across all projects.]
+
+**Health**
+
+1. [item]
+
+**Scheduling**
+
+2. [item]
+
+**[Project 1]**
+
+3. [item]
+
+**[Project 2]**
+
+4. [item]
+
+**[Project 3]**
+
+5. [item]
+
+### Next week's goals
+
+| Improvement |
+| :---- |
+| Work +2h in important outputs |
+| Spend 1+ hours OoH |
+| Make impact |
+
+| Health | Goal |
+| :---- | :---- |
+| Meditate | **7 days** |
+| Exercise | **[propose X days]** |
+| Sleep time | **[propose time]** |
+| Wake-up time | **[propose time]** |
+```
+
 **Classification rules:**
-- **Outcomes** = results/achievements (what changed in the world: approvals, contacts made, agreements, milestones reached, feedback received)
+- **Outcomes** = results (what changed in the world: approvals, contacts made, agreements, milestones, feedback received)
 - **Outputs** = concrete deliverables (what was produced: documents, posts, code, recordings)
-- Group Outputs by project — use your own project names (e.g. replace the placeholders below)
-- **"What did I do well?"** — focus on improvements to the *system of work* (new tools, habits, processes adopted), not just task completion
-- Draft all three narrative sections ("What did I do well?", "What could be improved?", "What will I commit to improving?") from the data — do not mark them as [PENDING]
-- **Do not include test/draft sends** as Outputs (e.g. newsletter test sends) — only final published editions
-
-```
-[DATE] -------------------------------------
-Sprint Review ([period], X workdays)
-Outcomes
-[known outcomes so far]
-Outputs
-[Project 1]
-[items]
-[Project 2]
-[items]
-[Project 3]
-[items]
-Personal
-[items]
-Other
-[items]
-
-Sprint Retrospective ([period], X workdays)
-Last week's improvement goals
-Improvement | Result
-Work +2h in important outputs | [PENDING] / X
-Spend 1+ hours OoH | [PENDING] / X
-Make impact | [PENDING] / X
-
-Health goals
-Health | Result
-Meditate | [PENDING] / 7
-Exercise | [PENDING] / X
-Bedtime | [PENDING] / [previous goal]
-Wake-up time | [PENDING] / [previous goal]
-
-What did I do well?
-[draft based on available data — focus on system/process improvements]
-
-What could be improved?
-[honest draft based on available data]
-
-What will I commit to improving?
-[one concrete, actionable commitment]
-
-Sprint Planning ([next period], X workdays)
-Week goal
-[inferred from highest-priority open tasks]
-
-Projects Priority
-[Project 1]
-[Project 2]
-[others]
-
-On my mind
-[relevant open tasks]
-
-On hold
-[paused items]
-
-Main Outputs
-[Propose based on TickTick `list_undone_tasks_by_date` for next week only — do NOT use Calendar or GitHub.
-Group by project in Projects Priority order. For projects with no dated tasks, propose reasonable outputs
-based on Retrospective commitments and sprint context. Never leave blank placeholders.]
-Health
-Scheduling
-[Project 1]
-[open tasks or proposed output]
-[Project 2]
-[open tasks or proposed output]
-[other projects]
-
-Next week's goals
-Improvement
-Work +2h in important outputs
-Spend 1+ hours OoH
-Make impact
-
-Health
-[Propose concrete numbers — never leave [PENDING]. Base on current week's targets and results.
-If health results are still pending at this stage, use current week's goals as baseline.]
-Goal
-Meditate | 7 days
-Exercise | [propose X days]
-Sleep time | [propose time]
-Wake-up time | [propose time]
-```
+- Do not include test/draft sends as Outputs — only final published editions and reader interactions
+- Do not include e-commerce orders/shipments
+- Section label is "Projects Priority" (not "Priority order")
+- "What did I do well?" focuses on system/process improvements (new tools, habits, workflows)
+- Draft all three narrative sections now — do not leave them as [PENDING]
+- Health goals: always propose concrete numbers — never leave [PENDING]
 
 ---
 
