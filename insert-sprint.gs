@@ -1,7 +1,13 @@
 const SPRINT_FILE_NAME = 'sprint-final.md';
-const DOC_ID = '1r-s3AhOBNJraeJmPV8TcnN5JPI-Qw8nnWtJewKzVf6I';
 
 function insertSprintReview() {
+  // Lê DOC_ID das Script Properties
+  const DOC_ID = PropertiesService.getScriptProperties().getProperty('DOC_ID');
+  if (!DOC_ID) {
+    Logger.log('Erro: DOC_ID não configurado nas Script Properties');
+    return;
+  }
+
   // Lê arquivo do Google Drive
   const fileContent = getFileContent(SPRINT_FILE_NAME);
   if (!fileContent) {
