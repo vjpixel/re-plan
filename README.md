@@ -26,6 +26,18 @@ The process runs in two stages:
 | Google Calendar | Google Calendar MCP |
 | Gmail | Gmail MCP |
 | GitHub | `gh` CLI (authenticated) |
+| Google Drive | Google Drive API (for upload automation) |
+
+## Automated Upload Workflow
+
+After running `/sprint-close`, automatically upload your completed sprint review to Google Drive and insert it into your Google Doc:
+
+```bash
+npm install
+APPS_SCRIPT_DEPLOY_ID=<your-deployment-id> node upload-sprint.js
+```
+
+See [SETUP.md](SETUP.md) for complete configuration instructions (Google Cloud credentials, Apps Script deployment ID, Google Doc ID).
 
 ## Setup
 
