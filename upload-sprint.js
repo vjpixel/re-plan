@@ -5,133 +5,183 @@ const { authenticate } = require('@google-cloud/local-auth');
 
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
-  'https://www.googleapis.com/auth/script.projects'
+  'https://www.googleapis.com/auth/documents'
 ];
 
 const TOKEN_PATH = path.join(__dirname, 'token.json');
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
 const SPRINT_FILE_PATH = path.join(__dirname, '.sprints', 'sprint-wip.md');
-const SPRINT_FILE_NAME = 'sprint-wip.md';
-const DEPLOY_ID = process.env.APPS_SCRIPT_DEPLOY_ID; // Set this via environment variable
+const DOC_ID = process.env.DOC_ID; // Set via environment variable
 
 async function authorize() {
-  let client = null;
-
-  // Load saved token if exists
-  if (fs.existsSync(TOKEN_PATH)) {
-    const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
-    client = google.oauth2({
-      clientId: require(CREDENTIALS_PATH).installed.client_id,
-      clientSecret: require(CREDENTIALS_PATH).installed.client_secret,
-      redirectUrl: require(CREDENTIALS_PATH).installed.redirect_uris[0]
-    }).oauth2Client;
-    client.setCredentials(token);
-  } else {
-    // Authenticate and save token
-    client = await authenticate({
-      scopes: SCOPES,
-      keyfilePath: CREDENTIALS_PATH
-    });
-
-    if (client.credentials) {
-      fs.writeFileSync(TOKEN_PATH, JSON.stringify(client.credentials));
-    }
+  if (!fs.existsSync(CREDENTIALS_PATH)) {
+    throw new Error(`Credentials file not found: ${CREDENTIALS_PATH}\nSee SETUP.md for configuration instructions.`);
   }
+
+  const client = await authenticate({
+    scopes: SCOPES,
+    keyfilePath: CREDENTIALS_PATH
+  });
 
   return client;
 }
 
-async function uploadSprintFile(auth) {
-  const drive = google.drive({ version: 'v3', auth });
+function parseMarkdown(content) {
+  const lines = content.split('\n');
+  const sections = [];
 
-  // Read local file
-  if (!fs.existsSync(SPRINT_FILE_PATH)) {
-    throw new Error(`File not found: ${SPRINT_FILE_PATH}`);
+  for (const line of lines) {
+    if (line.startsWith('# ')) {
+      sections.push({ type: 'heading1', text: line.replace('# ', '').trim() });
+    } else if (line.startsWith('## ')) {
+      sections.push({ type: 'heading2', text: line.replace('## ', '').trim() });
+    } else if (line.startsWith('### ')) {
+      sections.push({ type: 'heading3', text: line.replace('### ', '').trim() });
+    } else if (line.startsWith('* ') || line.startsWith('- ')) {
+      sections.push({ type: 'bullet', text: line.replace(/^[\*\-]\s/, '').trim() });
+    } else if (line.startsWith('| ')) {
+      // Skip tables for now
+      continue;
+    } else if (line.trim() === '') {
+      // Skip empty lines
+      continue;
+    } else if (line.trim()) {
+      sections.push({ type: 'paragraph', text: line.trim() });
+    }
   }
 
-  const fileContent = fs.readFileSync(SPRINT_FILE_PATH);
-
-  // Search for existing file
-  const listResponse = await drive.files.list({
-    q: `name='${SPRINT_FILE_NAME}' and trashed=false`,
-    spaces: 'drive',
-    pageSize: 1,
-    fields: 'files(id, name)'
-  });
-
-  let fileId = null;
-  if (listResponse.data.files.length > 0) {
-    fileId = listResponse.data.files[0].id;
-    console.log(`Found existing file: ${fileId}`);
-  }
-
-  // Upload or update file
-  if (fileId) {
-    // Update existing file
-    await drive.files.update({
-      fileId: fileId,
-      media: {
-        mimeType: 'text/plain',
-        body: fileContent
-      }
-    });
-    console.log(`✓ Updated file: ${SPRINT_FILE_NAME}`);
-  } else {
-    // Create new file
-    const createResponse = await drive.files.create({
-      resource: {
-        name: SPRINT_FILE_NAME,
-        mimeType: 'text/plain'
-      },
-      media: {
-        mimeType: 'text/plain',
-        body: fileContent
-      }
-    });
-    fileId = createResponse.data.id;
-    console.log(`✓ Created file: ${SPRINT_FILE_NAME} (${fileId})`);
-  }
-
-  return fileId;
+  return sections;
 }
 
-async function triggerAppsScript(auth) {
-  if (!DEPLOY_ID) {
-    console.log('⚠ APPS_SCRIPT_DEPLOY_ID not set. Skipping Apps Script execution.');
-    console.log('To trigger the script, run:');
-    console.log('  APPS_SCRIPT_DEPLOY_ID=<deployment-id> node upload-sprint.js');
-    return;
+async function insertToGoogleDoc(auth, sections) {
+  if (!DOC_ID) {
+    throw new Error('DOC_ID not set. Use: DOC_ID=your-doc-id node upload-sprint.js');
   }
 
-  const script = google.script({ version: 'v1', auth });
+  const docs = google.docs({ version: 'v1', auth });
+
+  // Build requests to insert content
+  const requests = [];
+  let insertIndex = 1;
+
+  for (const section of sections) {
+    if (section.type === 'heading1') {
+      requests.push({
+        insertText: {
+          text: section.text + '\n',
+          location: { index: insertIndex }
+        }
+      });
+      requests.push({
+        updateTextStyle: {
+          range: {
+            startIndex: insertIndex,
+            endIndex: insertIndex + section.text.length
+          },
+          textStyle: {
+            fontSize: { magnitude: 28, unit: 'pt' },
+            bold: true
+          },
+          fields: 'fontSize,bold'
+        }
+      });
+      insertIndex += section.text.length + 1;
+    } else if (section.type === 'heading2') {
+      requests.push({
+        insertText: {
+          text: section.text + '\n',
+          location: { index: insertIndex }
+        }
+      });
+      requests.push({
+        updateTextStyle: {
+          range: {
+            startIndex: insertIndex,
+            endIndex: insertIndex + section.text.length
+          },
+          textStyle: {
+            fontSize: { magnitude: 20, unit: 'pt' },
+            bold: true
+          },
+          fields: 'fontSize,bold'
+        }
+      });
+      insertIndex += section.text.length + 1;
+    } else if (section.type === 'heading3') {
+      requests.push({
+        insertText: {
+          text: section.text + '\n',
+          location: { index: insertIndex }
+        }
+      });
+      requests.push({
+        updateTextStyle: {
+          range: {
+            startIndex: insertIndex,
+            endIndex: insertIndex + section.text.length
+          },
+          textStyle: {
+            fontSize: { magnitude: 14, unit: 'pt' },
+            bold: true
+          },
+          fields: 'fontSize,bold'
+        }
+      });
+      insertIndex += section.text.length + 1;
+    } else if (section.type === 'bullet') {
+      requests.push({
+        insertText: {
+          text: section.text + '\n',
+          location: { index: insertIndex }
+        }
+      });
+      insertIndex += section.text.length + 1;
+    } else if (section.type === 'paragraph') {
+      requests.push({
+        insertText: {
+          text: section.text + '\n',
+          location: { index: insertIndex }
+        }
+      });
+      insertIndex += section.text.length + 1;
+    }
+  }
 
   try {
-    const response = await script.scripts.run({
-      scriptId: DEPLOY_ID,
+    await docs.documents.batchUpdate({
+      documentId: DOC_ID,
       requestBody: {
-        function: 'insertSprintReview'
+        requests: requests
       }
     });
 
-    if (response.data.error) {
-      console.error('✗ Apps Script error:', response.data.error);
-    } else {
-      console.log('✓ Apps Script executed: insertSprintReview()');
-    }
+    return true;
   } catch (error) {
-    console.error('✗ Failed to trigger Apps Script:', error.message);
+    throw new Error(`Failed to insert into Google Doc: ${error.message}`);
   }
 }
 
 async function main() {
   try {
-    console.log('🚀 Uploading sprint-wip.md to Google Drive...\n');
+    console.log('🚀 Inserting sprint-wip.md into Google Doc...\n');
+
+    if (!fs.existsSync(SPRINT_FILE_PATH)) {
+      throw new Error(`File not found: ${SPRINT_FILE_PATH}`);
+    }
+
+    const fileContent = fs.readFileSync(SPRINT_FILE_PATH, 'utf8');
+    console.log('✓ Read local file');
+
+    const sections = parseMarkdown(fileContent);
+    console.log(`✓ Parsed ${sections.length} sections`);
 
     const auth = await authorize();
-    await uploadSprintFile(auth);
-    await triggerAppsScript(auth);
+    console.log('✓ Authenticated with Google');
 
-    console.log('\n✓ Done!');
+    await insertToGoogleDoc(auth, sections);
+    console.log('✓ Inserted content into Google Doc\n');
+
+    console.log('✓ Done!');
   } catch (error) {
     console.error('Error:', error.message);
     process.exit(1);
