@@ -10,7 +10,7 @@ The process runs in two stages:
 - Automatically fetches data from TickTick, Google Calendar, Gmail, and GitHub
 - Generates a **day plan** (focus, priorities, time blocks for the rest of the day)
 - Generates a **draft** of the full Sprint Review → Retrospective → Planning document
-- Saves the draft to `~/sprint-wip.md` for completion on Monday
+- Saves the draft to `.sprints/sprint-wip.md` for completion on Monday
 
 **`/sprint-close`** — First workday of the new sprint (e.g. Monday)
 - Loads the saved draft
@@ -26,18 +26,22 @@ The process runs in two stages:
 | Google Calendar | Google Calendar MCP |
 | Gmail | Gmail MCP |
 | GitHub | `gh` CLI (authenticated) |
-| Google Drive | Google Drive API (for upload automation) |
 
-## Automated Upload Workflow
+## Automated Google Doc Workflow
 
-After running `/sprint-close`, automatically upload your completed sprint review to Google Drive and insert it into your Google Doc:
+After running `/sprint-close`, automatically insert your sprint review into a Google Doc with proper formatting:
 
-```bash
-npm install
-APPS_SCRIPT_DEPLOY_ID=<your-deployment-id> node upload-sprint.js
+```powershell
+$env:APPS_SCRIPT_DEPLOY_ID="your-deployment-id"
+node upload-sprint.js
 ```
 
-See [SETUP.md](SETUP.md) for complete configuration instructions (Google Cloud credentials, Apps Script deployment ID, Google Doc ID).
+**How it works:**
+1. Reads `sprint-wip.md` locally
+2. Passes content directly to Google Apps Script
+3. Apps Script inserts it formatted at the top of your Google Doc (headings, bullets, tables)
+
+See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
