@@ -12,6 +12,12 @@ The process runs in two stages:
 - Generates a **draft** of the full Sprint Review → Retrospective → Planning document
 - Saves the draft to `.sprints/sprint-wip.md` for completion on Monday
 
+**`/sprint-update`** — Any time between sprint-start and sprint-close
+- Loads the current draft from `.sprints/sprint-wip.md`
+- Displays the full content for review
+- Accepts edits — additions, removals, rewrites to any section
+- Saves the updated draft in place
+
 **`/sprint-close`** — First workday of the new sprint (e.g. Monday)
 - Loads the saved draft
 - Fetches new data since Friday (weekend completions, emails, commits)
@@ -45,12 +51,12 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
-1. Copy `sprint-start.md` and `sprint-close.md` to `~/.claude/commands/`
+1. Copy `sprint-start.md`, `sprint-update.md`, and `sprint-close.md` to `~/.claude/commands/`
 2. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names
 3. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`)
 
 ```bash
-cp sprint-start.md sprint-close.md ~/.claude/commands/
+cp sprint-start.md sprint-update.md sprint-close.md ~/.claude/commands/
 ```
 
 ## Document format
