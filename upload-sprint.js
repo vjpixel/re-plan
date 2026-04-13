@@ -60,7 +60,7 @@ async function insertToGoogleDoc(auth, sections) {
 
   const docs = google.docs({ version: 'v1', auth });
 
-  // Build requests to insert content
+  // Build requests to insert content with proper formatting
   const requests = [];
   let insertIndex = 1;
 
@@ -73,16 +73,15 @@ async function insertToGoogleDoc(auth, sections) {
         }
       });
       requests.push({
-        updateTextStyle: {
+        updateParagraphStyle: {
           range: {
             startIndex: insertIndex,
-            endIndex: insertIndex + section.text.length
+            endIndex: insertIndex + section.text.length + 1
           },
-          textStyle: {
-            fontSize: { magnitude: 28, unit: 'pt' },
-            bold: true
+          paragraphStyle: {
+            namedStyleType: 'HEADING_1'
           },
-          fields: 'fontSize,bold'
+          fields: 'namedStyleType'
         }
       });
       insertIndex += section.text.length + 1;
@@ -94,16 +93,15 @@ async function insertToGoogleDoc(auth, sections) {
         }
       });
       requests.push({
-        updateTextStyle: {
+        updateParagraphStyle: {
           range: {
             startIndex: insertIndex,
-            endIndex: insertIndex + section.text.length
+            endIndex: insertIndex + section.text.length + 1
           },
-          textStyle: {
-            fontSize: { magnitude: 20, unit: 'pt' },
-            bold: true
+          paragraphStyle: {
+            namedStyleType: 'HEADING_2'
           },
-          fields: 'fontSize,bold'
+          fields: 'namedStyleType'
         }
       });
       insertIndex += section.text.length + 1;
@@ -115,16 +113,15 @@ async function insertToGoogleDoc(auth, sections) {
         }
       });
       requests.push({
-        updateTextStyle: {
+        updateParagraphStyle: {
           range: {
             startIndex: insertIndex,
-            endIndex: insertIndex + section.text.length
+            endIndex: insertIndex + section.text.length + 1
           },
-          textStyle: {
-            fontSize: { magnitude: 14, unit: 'pt' },
-            bold: true
+          paragraphStyle: {
+            namedStyleType: 'HEADING_3'
           },
-          fields: 'fontSize,bold'
+          fields: 'namedStyleType'
         }
       });
       insertIndex += section.text.length + 1;
@@ -133,6 +130,15 @@ async function insertToGoogleDoc(auth, sections) {
         insertText: {
           text: section.text + '\n',
           location: { index: insertIndex }
+        }
+      });
+      requests.push({
+        createParagraphBullets: {
+          range: {
+            startIndex: insertIndex,
+            endIndex: insertIndex + section.text.length + 1
+          },
+          bulletPreset: 'BULLET_DISC'
         }
       });
       insertIndex += section.text.length + 1;
