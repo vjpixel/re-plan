@@ -3,11 +3,15 @@ const path = require('path');
 const { google } = require('googleapis');
 const { authenticate } = require('@google-cloud/local-auth');
 
-const SCOPES = ['https://www.googleapis.com/auth/documents'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/script.external_request',
+  'https://www.googleapis.com/auth/documents',
+  'https://www.googleapis.com/auth/drive'
+];
 
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
 const SPRINT_FILE_PATH = path.join(__dirname, '.sprints', 'sprint-wip.md');
-const DOC_ID = process.env.DOC_ID;
+const DEPLOY_ID = process.env.APPS_SCRIPT_DEPLOY_ID;
 
 async function authorize() {
   if (!fs.existsSync(CREDENTIALS_PATH)) {
@@ -16,165 +20,26 @@ async function authorize() {
   return authenticate({ scopes: SCOPES, keyfilePath: CREDENTIALS_PATH });
 }
 
-// Strip inline bold/italic markers from text
-function stripInlineMarkers(text) {
-  return text
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // **bold** → bold
-    .replace(/\*([^*]+)\*/g, '$1');    // *italic* → italic
-}
-
-function parseMarkdown(content) {
-  const lines = content.split('\n');
-  const blocks = [];
-  let tableRows = [];
-  let inTable = false;
-
-  for (const line of lines) {
-    // Skip HTML comments
-    if (line.trim().startsWith('<!--')) continue;
-
-    // Handle table rows
-    if (line.startsWith('|')) {
-      if (/^\|[\s:\-|]+\|$/.test(line)) continue; // skip separator rows
-      inTable = true;
-      const cells = line.split('|')
-        .map(c => c.trim())
-        .filter(c => c !== '')
-        .map(c => stripInlineMarkers(c));
-      tableRows.push(cells);
-      continue;
-    }
-
-    if (inTable) {
-      blocks.push({ type: 'table', rows: tableRows });
-      tableRows = [];
-      inTable = false;
-    }
-
-    if (line.startsWith('# ')) {
-      blocks.push({ type: 'h1', text: stripInlineMarkers(line.slice(2).trim()) });
-    } else if (line.startsWith('## ')) {
-      blocks.push({ type: 'h2', text: stripInlineMarkers(line.slice(3).trim()) });
-    } else if (line.startsWith('### ')) {
-      blocks.push({ type: 'h3', text: stripInlineMarkers(line.slice(4).trim()) });
-    } else if (/^\d+\.\s/.test(line)) {
-      blocks.push({ type: 'numbered', text: stripInlineMarkers(line.replace(/^\d+\.\s/, '').trim()) });
-    } else if (/^[*-]\s/.test(line)) {
-      blocks.push({ type: 'bullet', text: stripInlineMarkers(line.slice(2).trim()) });
-    } else if (line.trim() === '') {
-      // skip blank lines
-    } else {
-      const raw = line.trim();
-      const isBold = raw.startsWith('**') && raw.endsWith('**');
-      blocks.push({ type: 'paragraph', text: stripInlineMarkers(raw), bold: isBold });
-    }
+async function triggerAppsScript(auth, fileContent) {
+  if (!DEPLOY_ID) {
+    throw new Error('APPS_SCRIPT_DEPLOY_ID not set.');
   }
 
-  if (inTable && tableRows.length > 0) {
-    blocks.push({ type: 'table', rows: tableRows });
-  }
+  const script = google.script({ version: 'v1', auth });
 
-  return blocks;
-}
-
-async function insertToGoogleDoc(auth, blocks) {
-  if (!DOC_ID) {
-    throw new Error('DOC_ID not set. Run: $env:DOC_ID="your-doc-id" then node upload-sprint.js');
-  }
-
-  const docs = google.docs({ version: 'v1', auth });
-
-  // --- Phase 1: Build full text and track formatting ranges ---
-  let text = '';
-  const formatRanges = [];
-
-  for (const block of blocks) {
-    if (block.type === 'table') {
-      for (const row of block.rows) {
-        const rowText = row.join('    ') + '\n';
-        const start = text.length + 1;
-        text += rowText;
-        formatRanges.push({ start, end: start + rowText.length, type: 'paragraph', bold: false });
-      }
-    } else {
-      const line = block.text + '\n';
-      const start = text.length + 1;
-      text += line;
-      formatRanges.push({ start, end: start + line.length, type: block.type, bold: block.bold || false });
-    }
-  }
-
-  // --- Phase 2: Insert all text at once ---
-  await docs.documents.batchUpdate({
-    documentId: DOC_ID,
+  const response = await script.scripts.run({
+    scriptId: DEPLOY_ID,
     requestBody: {
-      requests: [{ insertText: { text, location: { index: 1 } } }]
+      function: 'insertSprintReview',
+      parameters: [fileContent]
     }
   });
-  console.log('✓ Text inserted');
 
-  // --- Phase 3: Apply formatting in a separate batchUpdate ---
-  const formatRequests = [];
-
-  for (const range of formatRanges) {
-    const r = { startIndex: range.start, endIndex: range.end };
-
-    if (range.type === 'h1') {
-      formatRequests.push({
-        updateParagraphStyle: {
-          range: r,
-          paragraphStyle: { namedStyleType: 'HEADING_1' },
-          fields: 'namedStyleType'
-        }
-      });
-    } else if (range.type === 'h2') {
-      formatRequests.push({
-        updateParagraphStyle: {
-          range: r,
-          paragraphStyle: { namedStyleType: 'HEADING_2' },
-          fields: 'namedStyleType'
-        }
-      });
-    } else if (range.type === 'h3') {
-      formatRequests.push({
-        updateParagraphStyle: {
-          range: r,
-          paragraphStyle: { namedStyleType: 'HEADING_3' },
-          fields: 'namedStyleType'
-        }
-      });
-    } else if (range.type === 'bullet') {
-      formatRequests.push({
-        createParagraphBullets: {
-          range: r,
-          bulletPreset: 'BULLET_DISC_CIRCLE_SQUARE'
-        }
-      });
-    } else if (range.type === 'numbered') {
-      formatRequests.push({
-        createParagraphBullets: {
-          range: r,
-          bulletPreset: 'NUMBERED_DECIMAL_ALPHA_ROMAN'
-        }
-      });
-    } else if (range.bold) {
-      formatRequests.push({
-        updateTextStyle: {
-          range: r,
-          textStyle: { bold: true },
-          fields: 'bold'
-        }
-      });
-    }
+  if (response.data.error) {
+    throw new Error('Apps Script error: ' + JSON.stringify(response.data.error));
   }
 
-  if (formatRequests.length > 0) {
-    await docs.documents.batchUpdate({
-      documentId: DOC_ID,
-      requestBody: { requests: formatRequests }
-    });
-    console.log('✓ Formatting applied');
-  }
+  console.log('✓ Apps Script executed insertSprintReview()');
 }
 
 async function main() {
@@ -184,13 +49,12 @@ async function main() {
     }
 
     const fileContent = fs.readFileSync(SPRINT_FILE_PATH, 'utf8');
-    const blocks = parseMarkdown(fileContent);
-    console.log(`✓ Parsed ${blocks.length} blocks from sprint-wip.md`);
+    console.log('✓ Read sprint-wip.md');
 
     const auth = await authorize();
     console.log('✓ Authenticated with Google');
 
-    await insertToGoogleDoc(auth, blocks);
+    await triggerAppsScript(auth, fileContent);
     console.log('\n✓ Done! Sprint review inserted into Google Doc.');
   } catch (error) {
     console.error('Error:', error.message);

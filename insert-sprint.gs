@@ -1,6 +1,4 @@
-const SPRINT_FILE_NAME = 'sprint-wip.md';
-
-function insertSprintReview() {
+function insertSprintReview(fileContent) {
   // Lê DOC_ID das Script Properties
   const DOC_ID = PropertiesService.getScriptProperties().getProperty('DOC_ID');
   if (!DOC_ID) {
@@ -8,10 +6,8 @@ function insertSprintReview() {
     return;
   }
 
-  // Lê arquivo do Google Drive
-  const fileContent = getFileContent(SPRINT_FILE_NAME);
   if (!fileContent) {
-    Logger.log('Erro: arquivo ' + SPRINT_FILE_NAME + ' não encontrado');
+    Logger.log('Erro: nenhum conteúdo recebido');
     return;
   }
 
@@ -71,19 +67,6 @@ function insertSprintReview() {
   Logger.log('Sprint atualizado com sucesso!');
 }
 
-function getFileContent(fileName) {
-  try {
-    const files = DriveApp.getFilesByName(fileName);
-    if (files.hasNext()) {
-      return files.next().getBlob().getDataAsString();
-    }
-    Logger.log('Arquivo não encontrado: ' + fileName);
-    return null;
-  } catch (e) {
-    Logger.log('Erro ao acessar arquivo: ' + e.toString());
-    return null;
-  }
-}
 
 function parseSprintMarkdown(content) {
   const lines = content.split('\n');
