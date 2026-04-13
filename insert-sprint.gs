@@ -8,10 +8,11 @@ function insertSprintReview() {
     return;
   }
 
-  // Lê arquivo do Google Drive
-  const fileContent = getFileContent(SPRINT_FILE_NAME);
+  // Lê arquivo do Google Drive (usando file ID para maior confiabilidade)
+  const SPRINT_FILE_ID = '1Jq-I1PeU8bYLToauc3xOqW3ov7PZOs9w';
+  const fileContent = getFileContent(SPRINT_FILE_ID);
   if (!fileContent) {
-    Logger.log('Erro: arquivo ' + SPRINT_FILE_NAME + ' não encontrado');
+    Logger.log('Erro: arquivo com ID ' + SPRINT_FILE_ID + ' não encontrado');
     return;
   }
 
@@ -71,12 +72,14 @@ function insertSprintReview() {
   Logger.log('Sprint atualizado com sucesso!');
 }
 
-function getFileContent(fileName) {
-  const files = DriveApp.getFilesByName(fileName);
-  if (files.hasNext()) {
-    return files.next().getBlob().getDataAsString();
+function getFileContent(fileId) {
+  try {
+    const file = DriveApp.getFileById(fileId);
+    return file.getBlob().getDataAsString();
+  } catch (e) {
+    Logger.log('Erro ao acessar arquivo: ' + e.toString());
+    return null;
   }
-  return null;
 }
 
 function parseSprintMarkdown(content) {
