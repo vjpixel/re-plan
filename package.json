@@ -1,14 +1,14 @@
 {
   "name": "claude-sprint-review",
   "version": "1.0.0",
-  "description": "Sprint review automation with Google Drive integration",
+  "description": "Sprint review automation with Google Docs integration",
   "main": "upload-sprint.js",
   "scripts": {
-    "upload": "node upload-sprint.js",
-    "upload-and-insert": "APPS_SCRIPT_DEPLOY_ID=$DEPLOY_ID node upload-sprint.js"
+    "upload": "node upload-sprint.js"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",
+    "dotenv": "^16.0.0",
     "googleapis": "^118.0.0"
   }
 }
