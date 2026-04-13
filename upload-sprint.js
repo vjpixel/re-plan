@@ -16,6 +16,13 @@ async function authorize() {
   return authenticate({ scopes: SCOPES, keyfilePath: CREDENTIALS_PATH });
 }
 
+// Strip inline bold/italic markers from text
+function stripInlineMarkers(text) {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // **bold** → bold
+    .replace(/\*([^*]+)\*/g, '$1');    // *italic* → italic
+}
+
 function parseMarkdown(content) {
   const lines = content.split('\n');
   const blocks = [];
@@ -23,10 +30,17 @@ function parseMarkdown(content) {
   let inTable = false;
 
   for (const line of lines) {
+    // Skip HTML comments
+    if (line.trim().startsWith('<!--')) continue;
+
+    // Handle table rows
     if (line.startsWith('|')) {
       if (/^\|[\s:\-|]+\|$/.test(line)) continue; // skip separator rows
       inTable = true;
-      const cells = line.split('|').map(c => c.trim()).filter(c => c !== '');
+      const cells = line.split('|')
+        .map(c => c.trim())
+        .filter(c => c !== '')
+        .map(c => stripInlineMarkers(c));
       tableRows.push(cells);
       continue;
     }
@@ -38,21 +52,21 @@ function parseMarkdown(content) {
     }
 
     if (line.startsWith('# ')) {
-      blocks.push({ type: 'h1', text: line.slice(2).trim() });
+      blocks.push({ type: 'h1', text: stripInlineMarkers(line.slice(2).trim()) });
     } else if (line.startsWith('## ')) {
-      blocks.push({ type: 'h2', text: line.slice(3).trim() });
+      blocks.push({ type: 'h2', text: stripInlineMarkers(line.slice(3).trim()) });
     } else if (line.startsWith('### ')) {
-      blocks.push({ type: 'h3', text: line.slice(4).trim() });
+      blocks.push({ type: 'h3', text: stripInlineMarkers(line.slice(4).trim()) });
     } else if (/^\d+\.\s/.test(line)) {
-      blocks.push({ type: 'numbered', text: line.replace(/^\d+\.\s/, '').trim() });
+      blocks.push({ type: 'numbered', text: stripInlineMarkers(line.replace(/^\d+\.\s/, '').trim()) });
     } else if (/^[*-]\s/.test(line)) {
-      blocks.push({ type: 'bullet', text: line.slice(2).trim() });
+      blocks.push({ type: 'bullet', text: stripInlineMarkers(line.slice(2).trim()) });
     } else if (line.trim() === '') {
       // skip blank lines
     } else {
-      const text = line.trim();
-      const isBold = text.startsWith('**') && text.endsWith('**');
-      blocks.push({ type: 'paragraph', text: text.replace(/\*\*/g, ''), bold: isBold });
+      const raw = line.trim();
+      const isBold = raw.startsWith('**') && raw.endsWith('**');
+      blocks.push({ type: 'paragraph', text: stripInlineMarkers(raw), bold: isBold });
     }
   }
 
@@ -70,24 +84,23 @@ async function insertToGoogleDoc(auth, blocks) {
 
   const docs = google.docs({ version: 'v1', auth });
 
-  // --- Phase 1: Build text content and track positions for formatting ---
+  // --- Phase 1: Build full text and track formatting ranges ---
   let text = '';
-  const formatRanges = []; // { start, end, type, bold }
+  const formatRanges = [];
 
   for (const block of blocks) {
     if (block.type === 'table') {
-      // Render table as plain rows separated by tabs
       for (const row of block.rows) {
-        const rowText = row.join('\t') + '\n';
-        const start = text.length + 1; // +1 for doc start index
+        const rowText = row.join('    ') + '\n';
+        const start = text.length + 1;
         text += rowText;
-        formatRanges.push({ start, end: start + rowText.length - 1, type: 'paragraph', bold: false });
+        formatRanges.push({ start, end: start + rowText.length, type: 'paragraph', bold: false });
       }
     } else {
       const line = block.text + '\n';
       const start = text.length + 1;
       text += line;
-      formatRanges.push({ start, end: start + line.length - 1, type: block.type, bold: block.bold || false });
+      formatRanges.push({ start, end: start + line.length, type: block.type, bold: block.bold || false });
     }
   }
 
@@ -95,25 +108,21 @@ async function insertToGoogleDoc(auth, blocks) {
   await docs.documents.batchUpdate({
     documentId: DOC_ID,
     requestBody: {
-      requests: [{
-        insertText: {
-          text,
-          location: { index: 1 }
-        }
-      }]
+      requests: [{ insertText: { text, location: { index: 1 } } }]
     }
   });
-
   console.log('✓ Text inserted');
 
-  // --- Phase 3: Apply formatting ---
+  // --- Phase 3: Apply formatting in a separate batchUpdate ---
   const formatRequests = [];
 
   for (const range of formatRanges) {
+    const r = { startIndex: range.start, endIndex: range.end };
+
     if (range.type === 'h1') {
       formatRequests.push({
         updateParagraphStyle: {
-          range: { startIndex: range.start, endIndex: range.end },
+          range: r,
           paragraphStyle: { namedStyleType: 'HEADING_1' },
           fields: 'namedStyleType'
         }
@@ -121,7 +130,7 @@ async function insertToGoogleDoc(auth, blocks) {
     } else if (range.type === 'h2') {
       formatRequests.push({
         updateParagraphStyle: {
-          range: { startIndex: range.start, endIndex: range.end },
+          range: r,
           paragraphStyle: { namedStyleType: 'HEADING_2' },
           fields: 'namedStyleType'
         }
@@ -129,7 +138,7 @@ async function insertToGoogleDoc(auth, blocks) {
     } else if (range.type === 'h3') {
       formatRequests.push({
         updateParagraphStyle: {
-          range: { startIndex: range.start, endIndex: range.end },
+          range: r,
           paragraphStyle: { namedStyleType: 'HEADING_3' },
           fields: 'namedStyleType'
         }
@@ -137,21 +146,21 @@ async function insertToGoogleDoc(auth, blocks) {
     } else if (range.type === 'bullet') {
       formatRequests.push({
         createParagraphBullets: {
-          range: { startIndex: range.start, endIndex: range.end },
-          bulletPreset: 'BULLET_DISC'
+          range: r,
+          bulletPreset: 'BULLET_DISC_CIRCLE_SQUARE'
         }
       });
     } else if (range.type === 'numbered') {
       formatRequests.push({
         createParagraphBullets: {
-          range: { startIndex: range.start, endIndex: range.end },
+          range: r,
           bulletPreset: 'NUMBERED_DECIMAL_ALPHA_ROMAN'
         }
       });
     } else if (range.bold) {
       formatRequests.push({
         updateTextStyle: {
-          range: { startIndex: range.start, endIndex: range.end },
+          range: r,
           textStyle: { bold: true },
           fields: 'bold'
         }
