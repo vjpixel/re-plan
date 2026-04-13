@@ -37,10 +37,11 @@ The process runs in two stages:
 
 After running `/sprint-close`, automatically insert your sprint review into a Google Doc with proper formatting:
 
-```powershell
-$env:APPS_SCRIPT_DEPLOY_ID="your-deployment-id"
+```bash
 node upload-sprint.js
 ```
+
+Configure your deployment ID once in `.env` (see [SETUP.md](SETUP.md)).
 
 **How it works:**
 1. Reads `sprint-wip.md` locally

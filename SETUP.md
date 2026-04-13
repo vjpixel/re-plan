@@ -45,17 +45,23 @@ npm install
    - Value: your Google Doc ID (from the URL: `docs.google.com/document/d/[ID]/edit`)
 3. Save
 
-### Step 5: Run the Workflow
+### Step 5: Configure .env
 
-**Windows PowerShell:**
-```powershell
-$env:APPS_SCRIPT_DEPLOY_ID="your-deployment-id"
-node upload-sprint.js
+Copy `.env.example` to `.env` and fill in your deployment ID:
+
+```bash
+cp .env.example .env
 ```
 
-**macOS / Linux:**
+Edit `.env`:
+```
+APPS_SCRIPT_DEPLOY_ID=your-deployment-id-here
+```
+
+### Step 6: Run the Workflow
+
 ```bash
-APPS_SCRIPT_DEPLOY_ID=your-deployment-id node upload-sprint.js
+node upload-sprint.js
 ```
 
 On first run, a browser window will open for Google authentication.
@@ -80,8 +86,10 @@ On first run, a browser window will open for Google authentication.
 |------|---------|
 | `upload-sprint.js` | Node.js script — reads file and calls Apps Script |
 | `insert-sprint.gs` | Google Apps Script — formats and inserts into Google Doc |
-| `credentials.json` | OAuth 2.0 credentials (create via Google Cloud Console, don't commit) |
-| `token.json` | Auto-generated after first auth (don't commit) |
+| `.env` | Local config (deployment ID) — not committed |
+| `.env.example` | Template for `.env` |
+| `credentials.json` | OAuth 2.0 credentials (create via Google Cloud Console) — not committed |
+| `token.json` | Auto-generated after first auth — not committed |
 
 ---
 
