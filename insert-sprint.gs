@@ -1,4 +1,4 @@
-const SPRINT_FILE_NAME = 'sprint-final.md';
+const SPRINT_FILE_NAME = 'sprint-wip.md';
 
 function insertSprintReview() {
   // Lê DOC_ID das Script Properties
