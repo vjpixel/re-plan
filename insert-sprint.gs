@@ -41,9 +41,11 @@ function insertSprintReview(fileContent) {
     // Empty lines
     if (line.trim() === '') continue;
 
-    // H1: # 19/Abr -----
+    // H1: # 19/Abr -----  (replace hyphens with em-dashes for continuous line)
     if (/^# .+\s-{3,}/.test(line)) {
-      const text = line.replace(/^# /, '').replace(/-+$/, '').trim();
+      let text = line.replace(/^# /, '').trim();
+      // Replace the trailing hyphen run with em-dashes (wider, render as a continuous line)
+      text = text.replace(/-{3,}\s*$/, '_'.repeat(20));
       body.insertParagraph(insertPos++, text)
           .setHeading(DocumentApp.ParagraphHeading.HEADING1);
       continue;
