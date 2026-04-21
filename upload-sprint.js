@@ -11,19 +11,48 @@ const SCOPES = [
 ];
 
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
+const TOKEN_PATH = path.join(__dirname, 'token.json');
 const SPRINT_FILE_PATH = path.join(__dirname, '.sprints', 'sprint-wip.md');
 const DEPLOY_ID = process.env.APPS_SCRIPT_DEPLOY_ID;
 
+async function loadSavedCredentials() {
+  try {
+    const content = fs.readFileSync(TOKEN_PATH, 'utf8');
+    return google.auth.fromJSON(JSON.parse(content));
+  } catch {
+    return null;
+  }
+}
+
+async function saveCredentials(client) {
+  const content = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+  const key = content.installed || content.web;
+  fs.writeFileSync(TOKEN_PATH, JSON.stringify({
+    type: 'authorized_user',
+    client_id: key.client_id,
+    client_secret: key.client_secret,
+    refresh_token: client.credentials.refresh_token,
+  }));
+}
+
 async function authorize() {
   if (!fs.existsSync(CREDENTIALS_PATH)) {
-    throw new Error(`credentials.json not found. See SETUP.md.`);
+    throw new Error('credentials.json not found. See SETUP.md.');
   }
-  return authenticate({ scopes: SCOPES, keyfilePath: CREDENTIALS_PATH });
+
+  // Reuse saved token if available
+  const saved = await loadSavedCredentials();
+  if (saved) return saved;
+
+  // First run: open browser for OAuth, then save token
+  const client = await authenticate({ scopes: SCOPES, keyfilePath: CREDENTIALS_PATH });
+  if (client.credentials) await saveCredentials(client);
+  return client;
 }
 
 async function triggerAppsScript(auth, fileContent) {
   if (!DEPLOY_ID) {
-    throw new Error('APPS_SCRIPT_DEPLOY_ID not set.');
+    throw new Error('APPS_SCRIPT_DEPLOY_ID not set in .env');
   }
 
   const script = google.script({ version: 'v1', auth });
@@ -32,7 +61,8 @@ async function triggerAppsScript(auth, fileContent) {
     scriptId: DEPLOY_ID,
     requestBody: {
       function: 'insertSprintReview',
-      parameters: [fileContent]
+      parameters: [fileContent],
+      devMode: true
     }
   });
 
@@ -46,7 +76,7 @@ async function triggerAppsScript(auth, fileContent) {
 async function main() {
   try {
     if (!fs.existsSync(SPRINT_FILE_PATH)) {
-      throw new Error(`File not found: ${SPRINT_FILE_PATH}`);
+      throw new Error('sprint-wip.md not found. Run /sprint-close first.');
     }
 
     const fileContent = fs.readFileSync(SPRINT_FILE_PATH, 'utf8');
