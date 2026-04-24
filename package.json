@@ -4,7 +4,11 @@
   "description": "Sprint review automation with Google Docs integration",
   "main": "upload-sprint.js",
   "scripts": {
-    "upload": "node upload-sprint.js"
+    "upload": "node upload-sprint.js",
+    "test": "node --test \"__tests__/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",

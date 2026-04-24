@@ -1,3 +1,8 @@
+// Apps Script entry point. The pure parsing helpers (parseInlineBold,
+// stripBold, and the regex-based dispatching) are duplicated in parser.js at
+// the repo root — that file is what the Node test suite (__tests__/parser.test.js)
+// runs against. Keep the two in sync when editing either.
+
 function insertSprintReview(fileContent) {
   const DOC_ID = PropertiesService.getScriptProperties().getProperty('DOC_ID');
   if (!DOC_ID) { throw new Error('DOC_ID not configured in Script Properties'); }
