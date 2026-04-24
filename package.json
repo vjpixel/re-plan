@@ -5,7 +5,7 @@
   "main": "upload-sprint.js",
   "scripts": {
     "upload": "node upload-sprint.js",
-    "test": "node --test \"__tests__/**/*.test.js\""
+    "test": "node --test __tests__/parser.test.js"
   },
   "engines": {
     "node": ">=18"
