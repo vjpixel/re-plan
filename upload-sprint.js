@@ -18,6 +18,7 @@ const DEPLOY_ID = process.env.APPS_SCRIPT_DEPLOY_ID;
 async function loadSavedCredentials() {
   try {
     const content = fs.readFileSync(TOKEN_PATH, 'utf8');
+    try { fs.chmodSync(TOKEN_PATH, 0o600); } catch {}
     return google.auth.fromJSON(JSON.parse(content));
   } catch {
     return null;
