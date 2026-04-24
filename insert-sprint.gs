@@ -14,12 +14,15 @@ function insertSprintReview(fileContent) {
   const lines = fileContent.split('\n');
 
   // Find where the review starts (first "# DD/Mon ---" heading)
-  let startIdx = 0;
+  let startIdx = -1;
   for (let i = 0; i < lines.length; i++) {
     if (/^# \d+\//.test(lines[i])) {
       startIdx = i;
       break;
     }
+  }
+  if (startIdx === -1) {
+    throw new Error('No H1 sprint heading found (expected a line matching "# D/Month ..."). Check sprint-wip.md format.');
   }
 
   let insertPos = 0;
