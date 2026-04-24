@@ -63,4 +63,6 @@ Ask only these 2 questions in one message:
 1. "Did anything get missed in **Outcomes** or **Outputs** from the weekend?"
 2. "Is the **week goal** and the **priority order** correct?"
 
-Incorporate feedback, deliver the final version, and **delete** `.sprints/sprint-wip.md`.
+Incorporate feedback and deliver the final version.
+
+Leave `.sprints/sprint-wip.md` in place — `upload-sprint.js` reads it to push the review into Google Docs. Delete the file manually once you no longer need it.
