@@ -27,12 +27,15 @@ async function loadSavedCredentials() {
 async function saveCredentials(client) {
   const content = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
   const key = content.installed || content.web;
-  fs.writeFileSync(TOKEN_PATH, JSON.stringify({
+  const payload = JSON.stringify({
     type: 'authorized_user',
     client_id: key.client_id,
     client_secret: key.client_secret,
     refresh_token: client.credentials.refresh_token,
-  }));
+  });
+  // mode 0o600: token contains a long-lived refresh_token; restrict to the owning user
+  fs.writeFileSync(TOKEN_PATH, payload, { mode: 0o600 });
+  fs.chmodSync(TOKEN_PATH, 0o600);
 }
 
 async function authorize() {
