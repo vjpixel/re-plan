@@ -92,26 +92,27 @@ function insertSprintReview(fileContent) {
 
     // Bullet: * text or - text
     if (/^[*-] /.test(line)) {
-      const text = stripBold(line.replace(/^[*-] /, '').trim());
-      const item = body.insertListItem(insertPos++, text);
+      const parsed = parseInlineBold(line.replace(/^[*-] /, '').trim());
+      const item = body.insertListItem(insertPos++, parsed.text);
       item.setGlyphType(DocumentApp.GlyphType.BULLET);
-      item.editAsText().setBold(false);
+      applyBoldRanges(item, parsed.ranges);
       continue;
     }
 
     // Numbered list: 1. text
     if (/^\d+\. /.test(line)) {
-      const text = stripBold(line.replace(/^\d+\. /, '').trim());
-      const item = body.insertListItem(insertPos++, text);
+      const parsed = parseInlineBold(line.replace(/^\d+\. /, '').trim());
+      const item = body.insertListItem(insertPos++, parsed.text);
       item.setGlyphType(DocumentApp.GlyphType.NUMBER);
-      item.editAsText().setBold(false);
+      applyBoldRanges(item, parsed.ranges);
       continue;
     }
 
     // Regular paragraph (e.g. items under "On my mind")
-    const text = stripBold(line.trim());
-    if (text) {
-      body.insertParagraph(insertPos++, text);
+    const parsed = parseInlineBold(line.trim());
+    if (parsed.text) {
+      const p = body.insertParagraph(insertPos++, parsed.text);
+      applyBoldRanges(p, parsed.ranges);
     }
   }
 
@@ -123,8 +124,44 @@ function insertSprintReview(fileContent) {
   Logger.log('Sprint review inserted successfully!');
 }
 
-function stripBold(text) {
-  return text.replace(/\*\*([^*]+)\*\*/g, '$1');
+// Returns { text, ranges } where text has **...** markers removed and
+// ranges is an array of [startIndex, endIndex] (both inclusive) pointing at
+// the positions of the originally bold runs in the stripped text.
+function parseInlineBold(raw) {
+  const ranges = [];
+  let text = '';
+  let i = 0;
+  while (i < raw.length) {
+    if (raw.charAt(i) === '*' && raw.charAt(i + 1) === '*') {
+      const end = raw.indexOf('**', i + 2);
+      if (end === -1) {
+        text += raw.substring(i);
+        break;
+      }
+      const boldText = raw.substring(i + 2, end);
+      if (boldText.length > 0) {
+        const startPos = text.length;
+        text += boldText;
+        ranges.push([startPos, text.length - 1]);
+      }
+      i = end + 2;
+    } else {
+      text += raw.charAt(i);
+      i++;
+    }
+  }
+  return { text: text, ranges: ranges };
+}
+
+function applyBoldRanges(element, ranges) {
+  const t = element.editAsText();
+  t.setBold(false);
+  for (let k = 0; k < ranges.length; k++) {
+    const r = ranges[k];
+    if (r[1] >= r[0]) {
+      t.setBold(r[0], r[1], true);
+    }
+  }
 }
 
 function flushTable(body, insertPos, tableLines) {
@@ -132,12 +169,13 @@ function flushTable(body, insertPos, tableLines) {
   const dataLines = tableLines.filter(l => !/^\|[\s:|-]+\|$/.test(l));
   if (dataLines.length === 0) return insertPos;
 
-  const rows = dataLines.map(row =>
-    row.split('|').slice(1, -1).map(cell => stripBold(cell.trim()))
+  const parsedRows = dataLines.map(row =>
+    row.split('|').slice(1, -1).map(cell => parseInlineBold(cell.trim()))
   );
-  if (rows.length === 0 || rows[0].length === 0) return insertPos;
+  if (parsedRows.length === 0 || parsedRows[0].length === 0) return insertPos;
 
-  const t = body.insertTable(insertPos++, rows);
+  const textRows = parsedRows.map(row => row.map(p => p.text));
+  const t = body.insertTable(insertPos++, textRows);
 
   const borderAttrs = {
     [DocumentApp.Attribute.BORDER_COLOR]: '#000000',
@@ -149,7 +187,11 @@ function flushTable(body, insertPos, tableLines) {
     for (let c = 0; c < row.getNumCells(); c++) {
       const cell = row.getCell(c);
       cell.setAttributes(borderAttrs);
-      if (r === 0) cell.editAsText().setBold(true);
+      if (r === 0) {
+        cell.editAsText().setBold(true);
+      } else {
+        applyBoldRanges(cell, parsedRows[r][c].ranges);
+      }
     }
   }
 
