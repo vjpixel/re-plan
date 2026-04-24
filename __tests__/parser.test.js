@@ -149,3 +149,86 @@ test('parseTable: keeps inline bold ranges in body cells (regression for #3)', (
   assert.equal(rows[1][1].text, '7h30 / 8h');
   assert.deepEqual(rows[1][1].ranges, [[0, 3]]);
 });
+
+// ---- Edge cases ----
+
+test('parseInlineBold: adjacent bold runs without separator', () => {
+  const { text, ranges } = parseInlineBold('**a****b**');
+  assert.equal(text, 'ab');
+  assert.deepEqual(ranges, [[0, 0], [1, 1]]);
+});
+
+test('parseInlineBold: bold at string boundaries', () => {
+  const { text, ranges } = parseInlineBold('**start**middle**end**');
+  assert.equal(text, 'startmiddleend');
+  assert.deepEqual(ranges, [[0, 4], [11, 13]]);
+});
+
+test('parseInlineBold: unicode characters inside bold', () => {
+  const { text, ranges } = parseInlineBold('status: **✓ done**');
+  assert.equal(text, 'status: ✓ done');
+  assert.deepEqual(ranges, [[8, 13]]);
+});
+
+test('parseInlineBold: empty input returns empty text and ranges', () => {
+  const { text, ranges } = parseInlineBold('');
+  assert.equal(text, '');
+  assert.deepEqual(ranges, []);
+});
+
+test('parseInlineBold: lone asterisk does not trigger bold', () => {
+  const { text, ranges } = parseInlineBold('a * b');
+  assert.equal(text, 'a * b');
+  assert.deepEqual(ranges, []);
+});
+
+test('findStartIdx: matches only at the start of a line, not mid-line', () => {
+  const lines = ['foo # 5/Mar', '# 5/Mar'];
+  assert.equal(findStartIdx(lines), 1);
+});
+
+test('classifyLine: bullet using "-" marker (not just "*")', () => {
+  const r = classifyLine('- item text');
+  assert.equal(r.type, 'bullet');
+  assert.equal(r.text, 'item text');
+});
+
+test('classifyLine: line with only whitespace after "## " falls back to paragraph', () => {
+  // "## " without content: line.startsWith('## ') is true, raw="" after trim.
+  // The italic regex does not match; returns h2 with empty mainText.
+  const r = classifyLine('## ');
+  assert.equal(r.type, 'h2');
+  assert.equal(r.mainText, '');
+});
+
+test('classifyLine: numbered list accepts multi-digit index', () => {
+  const r = classifyLine('42. forty-two');
+  assert.equal(r.type, 'numbered');
+  assert.equal(r.text, 'forty-two');
+});
+
+test('classifyLine: standalone bold with internal asterisk does NOT match bold-header', () => {
+  // Pattern is /^\*\*[^*]+\*\*$/ — the [^*]+ forbids asterisks inside.
+  const r = classifyLine('**foo*bar**');
+  // Falls through to inline bold parsing at paragraph level.
+  assert.equal(r.type, 'paragraph');
+});
+
+test('parseTable: table with a single column', () => {
+  const lines = [
+    '| Improvement |',
+    '| :---- |',
+    '| Work +2h |',
+    '| **Impact** |',
+  ];
+  const rows = parseTable(lines);
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0][0].text, 'Improvement');
+  assert.equal(rows[2][0].text, 'Impact');
+  assert.deepEqual(rows[2][0].ranges, [[0, 5]]);
+});
+
+test('parseTable: only the separator row produces no data rows', () => {
+  const rows = parseTable(['| :---- | :---: |']);
+  assert.deepEqual(rows, []);
+});
