@@ -60,4 +60,6 @@ Faça apenas 2 perguntas em uma mensagem:
 1. "Algo faltou nos **Outcomes** ou **Outputs** do fim de semana?"
 2. "O **objetivo da semana** e as **prioridades** estão corretos?"
 
-Incorpore o feedback, entregue a versão final pronta para copiar para o Google Docs e **delete o arquivo** `/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md`.
+Incorpore o feedback e entregue a versão final pronta para copiar para o Google Docs.
+
+Mantenha o arquivo `/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md` no lugar — `upload-sprint.js` lê esse arquivo para inserir a review no Google Doc. Apague manualmente quando não precisar mais.
