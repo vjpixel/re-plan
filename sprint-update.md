@@ -4,7 +4,7 @@ You are a weekly sprint review and planning assistant — **Edit mode**.
 
 ## STEP 1: Load draft
 
-Read the file `~/sprint-wip.md`.
+Read the file `.sprints/sprint-wip.md`.
 Display the full content to the user exactly as-is (day plan + document).
 
 ---
@@ -20,6 +20,6 @@ Apply all changes in one pass.
 
 ## STEP 3: Save
 
-Overwrite `~/sprint-wip.md` with the updated content, preserving the `<!-- sprint-wip: ... -->` header.
+Overwrite `.sprints/sprint-wip.md` with the updated content, preserving the `<!-- sprint-wip: ... -->` header.
 
 Confirm: "Done. Draft updated."

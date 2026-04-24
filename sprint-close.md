@@ -4,7 +4,7 @@ You are a weekly sprint review and planning assistant — **Stage 2** (first wor
 
 ## STEP 1: Load draft
 
-Read the file `~/sprint-wip.md`.
+Read the file `.sprints/sprint-wip.md`.
 Extract: sprint period, generation date, draft content.
 Tell the user: "Found the draft for sprint [period]. Collecting missing data now."
 
@@ -63,4 +63,4 @@ Ask only these 2 questions in one message:
 1. "Did anything get missed in **Outcomes** or **Outputs** from the weekend?"
 2. "Is the **week goal** and the **priority order** correct?"
 
-Incorporate feedback, deliver the final version, and **delete** `~/sprint-wip.md`.
+Incorporate feedback, deliver the final version, and **delete** `.sprints/sprint-wip.md`.

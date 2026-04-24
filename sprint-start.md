@@ -197,7 +197,7 @@ Items are numbered sequentially across all projects.]
 ## STEP 5: Save draft
 
 Save the full draft (day plan + document) to:
-`~/sprint-wip.md`
+`.sprints/sprint-wip.md`
 
 Include at the top:
 ```
@@ -209,5 +209,5 @@ Include at the top:
 ## STEP 6: Confirm
 
 Tell the user:
-- "Draft saved to ~/sprint-wip.md. Use `/sprint-close` on Monday to complete it."
+- "Draft saved to .sprints/sprint-wip.md. Use `/sprint-close` on Monday to complete it."
 - Ask: "Does the day plan look right? Anything to adjust in the draft?"
