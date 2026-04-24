@@ -49,10 +49,9 @@ function insertSprintReview(fileContent) {
     // Empty lines
     if (line.trim() === '') continue;
 
-    // H1: # 19/Abr -----  (replace hyphen run with underscores to render as a continuous line)
-    if (/^# .+\s-{3,}/.test(line)) {
+    // H1: # 19/Abr [-----]  (trailing hyphen run optional — replaced with underscores to render as a continuous line)
+    if (/^# \d+\//.test(line)) {
       let text = line.replace(/^# /, '').trim();
-      // Underscores render flush together as a solid baseline rule in Google Docs
       text = text.replace(/-{3,}\s*$/, '_'.repeat(20));
       body.insertParagraph(insertPos++, text)
           .setHeading(DocumentApp.ParagraphHeading.HEADING1);
