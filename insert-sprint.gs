@@ -51,9 +51,10 @@ function insertSprintReview(fileContent) {
 
     // H1: # 19/Abr [-----]  (trailing hyphen run optional — replaced with underscores to render as a continuous line)
     if (/^# \d+\//.test(line)) {
-      let text = line.replace(/^# /, '').trim();
-      text = text.replace(/-{3,}\s*$/, '_'.repeat(20));
-      body.insertParagraph(insertPos++, text)
+      let raw = line.replace(/^# /, '').trim();
+      raw = raw.replace(/-{3,}\s*$/, '_'.repeat(20));
+      const parsed = parseInlineBold(raw);
+      body.insertParagraph(insertPos++, parsed.text)
           .setHeading(DocumentApp.ParagraphHeading.HEADING1);
       continue;
     }
@@ -63,19 +64,20 @@ function insertSprintReview(fileContent) {
       const raw = line.replace(/^## /, '').trim();
       const match = raw.match(/^(.+?)\s+\*(.+)\*$/);
       if (match) {
-        const mainText = match[1];
-        const italicText = match[2]; // asterisks stripped by regex
-        const fullText = mainText + ' ' + italicText;
+        const parsedMain = parseInlineBold(match[1]);
+        const italicText = match[2]; // single-asterisks stripped by regex
+        const fullText = parsedMain.text + ' ' + italicText;
         const p = body.insertParagraph(insertPos++, fullText);
         p.setHeading(DocumentApp.ParagraphHeading.HEADING2);
         const t = p.editAsText();
-        const italicStart = mainText.length + 1;
+        const italicStart = parsedMain.text.length + 1;
         const italicEnd = fullText.length - 1;
         t.setItalic(italicStart, italicEnd, true);
         t.setBold(italicStart, italicEnd, false);
         t.setFontSize(italicStart, italicEnd, 12);
       } else {
-        body.insertParagraph(insertPos++, raw)
+        const parsed = parseInlineBold(raw);
+        body.insertParagraph(insertPos++, parsed.text)
             .setHeading(DocumentApp.ParagraphHeading.HEADING2);
       }
       continue;
@@ -83,8 +85,8 @@ function insertSprintReview(fileContent) {
 
     // H3: ### text
     if (line.startsWith('### ')) {
-      const text = line.replace(/^### /, '').trim();
-      body.insertParagraph(insertPos++, text)
+      const parsed = parseInlineBold(line.replace(/^### /, '').trim());
+      body.insertParagraph(insertPos++, parsed.text)
           .setHeading(DocumentApp.ParagraphHeading.HEADING3);
       continue;
     }
