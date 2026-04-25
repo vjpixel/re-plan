@@ -1,7 +1,7 @@
-// Apps Script entry point. The pure parsing helpers (parseInlineBold,
-// stripBold, and the regex-based dispatching) are duplicated in parser.js at
-// the repo root — that file is what the Node test suite (__tests__/parser.test.js)
-// runs against. Keep the two in sync when editing either.
+// Apps Script entry point. The pure parsing helpers live in parser.js (the
+// Node test suite in __tests__/parser.test.js runs against them). Functions
+// that need to run inside Apps Script are inlined into the auto-generated
+// region below by `npm run build` — edit them in parser.js, never here.
 
 function insertSprintReview(fileContent) {
   const DOC_ID = PropertiesService.getScriptProperties().getProperty('DOC_ID');
@@ -133,9 +133,8 @@ function insertSprintReview(fileContent) {
   Logger.log('Sprint review inserted successfully!');
 }
 
-// Returns { text, ranges } where text has **...** markers removed and
-// ranges is an array of [startIndex, endIndex] (both inclusive) pointing at
-// the positions of the originally bold runs in the stripped text.
+// ===== BEGIN auto-generated from parser.js =====
+// Do not edit by hand — run "npm run build" to regenerate from parser.js.
 function parseInlineBold(raw) {
   const ranges = [];
   let text = '';
@@ -159,8 +158,9 @@ function parseInlineBold(raw) {
       i++;
     }
   }
-  return { text: text, ranges: ranges };
+  return { text, ranges };
 }
+// ===== END auto-generated from parser.js =====
 
 function applyBoldRanges(element, ranges) {
   const t = element.editAsText();

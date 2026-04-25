@@ -26,6 +26,10 @@ jobs:
           node --check find-script-id.js
           node --check test-script.js
           node --check parser.js
+          node --check build.js
+
+      - name: Verify insert-sprint.gs is in sync with parser.js
+        run: npm run check-sync
 
       - name: Run tests
         run: npm test

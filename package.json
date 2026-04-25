@@ -5,6 +5,8 @@
   "main": "upload-sprint.js",
   "scripts": {
     "upload": "node upload-sprint.js",
+    "build": "node build.js",
+    "check-sync": "node build.js --check",
     "test": "node --test __tests__/parser.test.js"
   },
   "engines": {
