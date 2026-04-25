@@ -13,7 +13,7 @@ const SCOPES = [
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
 const TOKEN_PATH = path.join(__dirname, 'token.json');
 const SPRINT_FILE_PATH = path.join(__dirname, '.sprints', 'sprint-wip.md');
-const DEPLOY_ID = process.env.APPS_SCRIPT_DEPLOY_ID;
+const SCRIPT_ID = process.env.APPS_SCRIPT_ID;
 
 async function loadSavedCredentials() {
   try {
@@ -55,14 +55,14 @@ async function authorize() {
 }
 
 async function triggerAppsScript(auth, fileContent) {
-  if (!DEPLOY_ID) {
-    throw new Error('APPS_SCRIPT_DEPLOY_ID not set in .env');
+  if (!SCRIPT_ID) {
+    throw new Error('APPS_SCRIPT_ID not set in .env (see SETUP.md)');
   }
 
   const script = google.script({ version: 'v1', auth });
 
   const response = await script.scripts.run({
-    scriptId: DEPLOY_ID,
+    scriptId: SCRIPT_ID,
     requestBody: {
       function: 'insertSprintReview',
       parameters: [fileContent],

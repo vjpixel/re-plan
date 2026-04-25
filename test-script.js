@@ -3,7 +3,7 @@ const { google } = require('googleapis');
 const { authenticate } = require('@google-cloud/local-auth');
 const path = require('path');
 
-const SCRIPT_ID = process.env.APPS_SCRIPT_DEPLOY_ID;
+const SCRIPT_ID = process.env.APPS_SCRIPT_ID;
 
 async function main() {
   const auth = await authenticate({

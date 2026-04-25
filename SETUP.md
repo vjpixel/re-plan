@@ -33,10 +33,13 @@ npm install
 ```
 
 ### Step 3: Deploy Apps Script as API Executable
+
+The Apps Script API requires the project to have at least one deployment, even when invoked with `devMode: true`.
+
 1. Open your Google Apps Script project (where `insert-sprint.gs` is deployed)
 2. Click **Deploy** → **New deployment**
 3. Type: **API Executable**
-4. Copy the **Deployment ID**
+4. Save the deployment
 
 ### Step 4: Set DOC_ID in Script Properties
 1. In Apps Script editor → **Tools** → **Script properties**
@@ -47,7 +50,11 @@ npm install
 
 ### Step 5: Configure .env
 
-Copy `.env.example` to `.env` and fill in your deployment ID:
+You need the Apps Script project's **Script ID** (not the Deployment ID).
+
+To find it: in the Apps Script editor → gear icon (**Project Settings**) → **IDs** → copy "Script ID". You can also read it off the script URL: `https://script.google.com/d/<SCRIPT_ID>/edit`.
+
+Copy `.env.example` to `.env` and fill in:
 
 ```bash
 cp .env.example .env
@@ -55,8 +62,10 @@ cp .env.example .env
 
 Edit `.env`:
 ```
-APPS_SCRIPT_DEPLOY_ID=your-deployment-id-here
+APPS_SCRIPT_ID=your-script-id-here
 ```
+
+> **Migrating from `APPS_SCRIPT_DEPLOY_ID`:** if your existing `.env` uses the older variable name, just rename the key to `APPS_SCRIPT_ID`. The value (Script ID) is the same — earlier docs misnamed it as "Deployment ID", but `script.scripts.run` and `script.projects.get` always required the Script ID. See issue #5.
 
 ### Step 6: Run the Workflow
 
@@ -86,7 +95,7 @@ On first run, a browser window will open for Google authentication.
 |------|---------|
 | `upload-sprint.js` | Node.js script — reads file and calls Apps Script |
 | `insert-sprint.gs` | Google Apps Script — formats and inserts into Google Doc |
-| `.env` | Local config (deployment ID) — not committed |
+| `.env` | Local config (`APPS_SCRIPT_ID`) — not committed |
 | `.env.example` | Template for `.env` |
 | `credentials.json` | OAuth 2.0 credentials (create via Google Cloud Console) — not committed |
 | `token.json` | Auto-generated after first auth — not committed |
