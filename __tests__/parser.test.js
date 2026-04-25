@@ -55,6 +55,7 @@ test('classifyLine: h1 with trailing hyphen rule', () => {
   const r = classifyLine('# 19/Abr -------------------------------------');
   assert.equal(r.type, 'h1');
   assert.equal(r.text, '19/Abr ' + '_'.repeat(20));
+  assert.deepEqual(r.ranges, []);
 });
 
 test('classifyLine: h1 without trailing hyphens (regression for #6)', () => {
@@ -63,11 +64,28 @@ test('classifyLine: h1 without trailing hyphens (regression for #6)', () => {
   assert.equal(r.text, '19/Abr');
 });
 
+test('classifyLine: h1 with inline bold after the date strips markers (regression for #21)', () => {
+  // The H1 regex requires a digit right after "# ", so bold must come after the date.
+  const r = classifyLine('# 19/Abr **special** -----');
+  assert.equal(r.type, 'h1');
+  assert.equal(r.text, '19/Abr special ' + '_'.repeat(20));
+  assert.deepEqual(r.ranges, [[7, 13]]);
+});
+
 test('classifyLine: h2 with italic period', () => {
   const r = classifyLine('## Sprint Review *(Mar 30-Apr 5, 5 workdays)*');
   assert.equal(r.type, 'h2');
   assert.equal(r.mainText, 'Sprint Review');
   assert.equal(r.italicText, '(Mar 30-Apr 5, 5 workdays)');
+  assert.deepEqual(r.ranges, []);
+});
+
+test('classifyLine: h2 with bold in mainText and italic period (regression for #21)', () => {
+  const r = classifyLine('## **Sprint** Review *(period)*');
+  assert.equal(r.type, 'h2');
+  assert.equal(r.mainText, 'Sprint Review');
+  assert.equal(r.italicText, '(period)');
+  assert.deepEqual(r.ranges, [[0, 5]]);
 });
 
 test('classifyLine: h2 without italic part', () => {
@@ -77,10 +95,26 @@ test('classifyLine: h2 without italic part', () => {
   assert.equal(r.italicText, undefined);
 });
 
+test('classifyLine: h2 inline bold without italic (regression for #21)', () => {
+  const r = classifyLine('## **Sprint** Review');
+  assert.equal(r.type, 'h2');
+  assert.equal(r.mainText, 'Sprint Review');
+  assert.equal(r.italicText, undefined);
+  assert.deepEqual(r.ranges, [[0, 5]]);
+});
+
 test('classifyLine: h3', () => {
   const r = classifyLine('### Outcomes');
   assert.equal(r.type, 'h3');
   assert.equal(r.text, 'Outcomes');
+  assert.deepEqual(r.ranges, []);
+});
+
+test('classifyLine: h3 with inline bold strips markers (regression for #21)', () => {
+  const r = classifyLine('### **Outcomes** for week');
+  assert.equal(r.type, 'h3');
+  assert.equal(r.text, 'Outcomes for week');
+  assert.deepEqual(r.ranges, [[0, 7]]);
 });
 
 test('classifyLine: bullet with inline bold preserves ranges (regression for #3)', () => {

@@ -54,22 +54,31 @@ function classifyLine(line) {
   if (line.trim() === '') return { type: 'empty' };
 
   if (/^# \d+\//.test(line)) {
-    let text = line.replace(/^# /, '').trim();
-    text = text.replace(/-{3,}\s*$/, '_'.repeat(20));
-    return { type: 'h1', text };
+    let raw = line.replace(/^# /, '').trim();
+    raw = raw.replace(/-{3,}\s*$/, '_'.repeat(20));
+    const parsed = parseInlineBold(raw);
+    return { type: 'h1', text: parsed.text, ranges: parsed.ranges };
   }
 
   if (line.startsWith('## ')) {
     const raw = line.replace(/^## /, '').trim();
     const match = raw.match(/^(.+?)\s+\*(.+)\*$/);
     if (match) {
-      return { type: 'h2', mainText: match[1], italicText: match[2] };
+      const parsedMain = parseInlineBold(match[1]);
+      return {
+        type: 'h2',
+        mainText: parsedMain.text,
+        ranges: parsedMain.ranges,
+        italicText: match[2],
+      };
     }
-    return { type: 'h2', mainText: raw };
+    const parsed = parseInlineBold(raw);
+    return { type: 'h2', mainText: parsed.text, ranges: parsed.ranges };
   }
 
   if (line.startsWith('### ')) {
-    return { type: 'h3', text: line.replace(/^### /, '').trim() };
+    const parsed = parseInlineBold(line.replace(/^### /, '').trim());
+    return { type: 'h3', text: parsed.text, ranges: parsed.ranges };
   }
 
   if (/^\*\*[^*]+\*\*$/.test(line)) {
