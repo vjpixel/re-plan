@@ -26,6 +26,23 @@ Ao receber:
 
 ---
 
+## PASSO 1b: Contexto do sprint anterior
+
+Antes de coletar dados, leia `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md` (se existir).
+
+Extraia, do Sprint Planning anterior:
+- Itens em **On my mind**
+- Itens em **On hold**
+- Metas de **Health** (Meditate, Exercise, Sleep Score)
+
+Use essas informações no PASSO 4c:
+- "On my mind" e "On hold" são preservados no novo Planning a menos que haja sinal de mudança (item resolvido, projeto retomado, decisão recebida)
+- Metas de Health do sprint anterior servem como baseline para propor as próximas metas
+
+Se o arquivo não existir, prossiga sem contexto anterior.
+
+---
+
 ## PASSO 2: Coleta automática de dados
 
 Execute em paralelo **sem pedir permissão**:
@@ -234,7 +251,7 @@ Aguarde confirmação antes de continuar.
 ## PASSO 5: Salvar rascunho
 
 Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo:
-`/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md`
+`/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md`
 
 Inclua no topo do arquivo:
 ```
@@ -246,4 +263,4 @@ Inclua no topo do arquivo:
 ## PASSO 6: Confirmar
 
 Informe ao usuário:
-- "Rascunho salvo em claude-sprint-review/.sprints/sprint-wip.md. Quando quiser fechar o sprint na segunda, use `/sprint-close`."
+- "Rascunho salvo em Re-plan/.sprints/sprint-wip.md. Quando quiser fechar o sprint na segunda, use `/sprint-close`."

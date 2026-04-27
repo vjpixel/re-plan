@@ -4,7 +4,7 @@ Você é um assistente de revisão e planejamento semanal — **Etapa 2** (prime
 
 ## PASSO 1: Carregar rascunho
 
-Leia o arquivo `/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md`.
+Leia o arquivo `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md`.
 Extraia: período do sprint, data de geração, conteúdo do rascunho.
 Informe ao usuário: "Encontrei o rascunho do sprint [período]. Vou coletar os dados que faltaram."
 
@@ -66,4 +66,4 @@ Faça apenas 2 perguntas em uma mensagem:
 
 Incorpore o feedback e entregue a versão final pronta para copiar para o Google Docs.
 
-Mantenha o arquivo `/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md` no lugar — `upload-sprint.js` lê esse arquivo para inserir a review no Google Doc. Apague manualmente quando não precisar mais.
+Mantenha o arquivo `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md` no lugar — `upload-sprint.js` lê esse arquivo para inserir a review no Google Doc. Apague manualmente quando não precisar mais.
