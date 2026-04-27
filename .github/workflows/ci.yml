@@ -34,21 +34,11 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Skill files use <<REPO_PATH>> placeholder, not hardcoded paths
-        run: |
-          # Skill files are templates: every absolute path pointing at a
-          # clone-specific location must use the <<REPO_PATH>> token.
-          # Catch obvious user-home prefixes that snuck in.
-          if grep -nE '(^|[^<])(/c/Users/|/Users/|/home/)[A-Za-z0-9_.-]+/' sprint-start.md sprint-update.md sprint-close.md; then
-            echo "::error::Skill files contain hardcoded absolute user paths. Use <<REPO_PATH>> instead."
-            exit 1
-          fi
+  skill-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: install-skills.sh produces clean output (no leftover placeholders)
-        run: |
-          dest="$(mktemp -d)"
-          bash bin/install-skills.sh "$dest"
-          if grep -l '<<REPO_PATH>>' "$dest"/*.md; then
-            echo "::error::install-skills.sh left <<REPO_PATH>> tokens in output — placeholder spelling drift?"
-            exit 1
-          fi
+      # Pure shell check — no node modules needed, runs in parallel with `test`.
+      - name: Validate skill files (no hardcoded paths, clean install)
+        run: bash bin/check-skills.sh

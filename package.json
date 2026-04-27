@@ -8,7 +8,8 @@
     "build": "node build.js",
     "check-sync": "node build.js --check",
     "install-skills": "bash bin/install-skills.sh",
-    "test": "node --test __tests__/parser.test.js __tests__/insert.test.js"
+    "check-skills": "bash bin/check-skills.sh",
+    "test": "node --test __tests__/parser.test.js __tests__/insert.test.js __tests__/skill-checks.test.js"
   },
   "engines": {
     "node": ">=18"
