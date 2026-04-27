@@ -60,30 +60,7 @@ For the full Drive-upload setup (OAuth, Apps Script, `.env`), see [SETUP.md](SET
 
 ## Document format
 
-The generated document follows this structure:
-
-```
-[DATE] -------------------------------------
-Sprint Review ([period], X workdays)
-  Outcomes
-  Outputs
-    [by project]
-
-Sprint Retrospective
-  Last week's improvement goals (with results)
-  Health goals (with results)
-  What did I do well?
-  What could be improved?
-  What will I commit to improving?
-
-Sprint Planning ([next period])
-  Week goal
-  Projects Priority
-  On my mind
-  On hold
-  Outcomes        # numbered, one per active project, "Project → result"
-  Next week's goals
-```
+The exact structure of the generated document — Review/Retrospective/Planning sections, Outputs/Outcomes rules, table layouts — is defined by the skill files themselves. Rather than mirror it here (and risk drift), see [`sprint-start.md`](sprint-start.md) for the authoritative templates: PASSO 4a (Review), PASSO 4b (Retrospective), and PASSO 4c (Planning).
 
 ## Notes
 
