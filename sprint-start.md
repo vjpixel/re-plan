@@ -271,4 +271,4 @@ Inclua no topo do arquivo:
 ## PASSO 6: Confirmar
 
 Informe ao usuário:
-- "Rascunho salvo em Re-plan/.sprints/sprint-wip.md. Quando quiser fechar o sprint na segunda, use `/sprint-close`."
+- "Rascunho salvo em `.sprints/sprint-wip.md`. Quando quiser fechar o sprint na segunda, use `/sprint-close`."
