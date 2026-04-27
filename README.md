@@ -1,6 +1,6 @@
-# claude-sprint-review
+# Re-plan
 
-Claude Code slash commands for a two-stage weekly sprint review and planning workflow.
+Claude Code slash commands for a two-stage weekly sprint review and planning workflow. (Originally published as `claude-sprint-review`; the canonical project name is now `re-plan`, matching the GitHub repository.)
 
 ## How it works
 
@@ -52,13 +52,11 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
-1. Copy `sprint-start.md`, `sprint-update.md`, and `sprint-close.md` to `~/.claude/commands/`
-2. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names
-3. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`)
+1. **Install the skill files** with `bash install-skills.sh` — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
+2. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names.
+3. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
 
-```bash
-cp sprint-start.md sprint-update.md sprint-close.md ~/.claude/commands/
-```
+For the full Drive-upload setup (OAuth, Apps Script, `.env`), see [SETUP.md](SETUP.md).
 
 ## Document format
 

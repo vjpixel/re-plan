@@ -26,6 +26,31 @@ Ao receber:
 
 ---
 
+## PASSO 1b: Contexto do sprint anterior
+
+Antes de coletar dados, identifique o arquivo mais recente em `<<REPO_PATH>>/.sprints/archive/` (nomes em formato `YYYY-MM-DD.md`, escolha a data mais recente) e leia-o. Esse arquivo é o snapshot imutável do último sprint fechado e é a fonte canônica de contexto entre sprints.
+
+Extraia, do Sprint Planning anterior:
+- Itens em **On my mind**
+- Itens em **On hold**
+- Metas de **Health** (Meditate, Exercise, Sleep Score)
+
+Aplique essas informações no PASSO 4c. Itens "On my mind" e "On hold" só são removidos quando há sinal **explícito** nos dados coletados no PASSO 2 — nunca por inferência genérica:
+
+- Remover de **On my mind** se:
+  - Tarefa correspondente foi concluída em TickTick no período do sprint, OU
+  - Email de aprovação/decisão/resposta chegou em Gmail (ex.: recrutador respondeu, parceiro confirmou)
+- Mover de **On hold** para **Projects Priority** se:
+  - O bloqueador (pessoa/decisão externa) respondeu por email/calendário, OU
+  - Tarefas associadas ao projeto foram reativadas em TickTick (saíram do estado "aguardando")
+- Caso contrário, preservar o item exatamente como está no arquivo arquivado.
+
+Metas de Health do sprint anterior servem como baseline para propor as próximas metas (ex.: se Sleep Score foi 70 com meta 85, propor algo como 77 — ajuste incremental, não otimista).
+
+Se o diretório `archive/` não existir ou estiver vazio (primeiro uso), tente o fallback legacy `<<REPO_PATH>>/.sprints/sprint-final.md` (formato antigo, sprint anterior). Se nem isso existir, prossiga sem contexto anterior.
+
+---
+
 ## PASSO 2: Coleta automática de dados
 
 Execute em paralelo **sem pedir permissão**:
@@ -234,7 +259,7 @@ Aguarde confirmação antes de continuar.
 ## PASSO 5: Salvar rascunho
 
 Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo:
-`/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md`
+`<<REPO_PATH>>/.sprints/sprint-wip.md`
 
 Inclua no topo do arquivo:
 ```
@@ -246,4 +271,4 @@ Inclua no topo do arquivo:
 ## PASSO 6: Confirmar
 
 Informe ao usuário:
-- "Rascunho salvo em claude-sprint-review/.sprints/sprint-wip.md. Quando quiser fechar o sprint na segunda, use `/sprint-close`."
+- "Rascunho salvo em Re-plan/.sprints/sprint-wip.md. Quando quiser fechar o sprint na segunda, use `/sprint-close`."

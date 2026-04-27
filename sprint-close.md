@@ -4,7 +4,7 @@ Você é um assistente de revisão e planejamento semanal — **Etapa 2** (prime
 
 ## PASSO 1: Carregar rascunho
 
-Leia o arquivo `/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md`.
+Leia o arquivo `<<REPO_PATH>>/.sprints/sprint-wip.md`.
 Extraia: período do sprint, data de geração, conteúdo do rascunho.
 Informe ao usuário: "Encontrei o rascunho do sprint [período]. Vou coletar os dados que faltaram."
 
@@ -66,4 +66,13 @@ Faça apenas 2 perguntas em uma mensagem:
 
 Incorpore o feedback e entregue a versão final pronta para copiar para o Google Docs.
 
-Mantenha o arquivo `/c/Users/vjpix/claude-sprint-review/.sprints/sprint-wip.md` no lugar — `upload-sprint.js` lê esse arquivo para inserir a review no Google Doc. Apague manualmente quando não precisar mais.
+---
+
+## PASSO 6: Salvar e arquivar
+
+Após a versão final estar aprovada:
+
+1. **Sobrescreva `.sprints/sprint-wip.md`** com o conteúdo final limpo (sem `[PENDING]`, sem comentários). Esse é o arquivo que `upload-sprint.js` envia para o Google Doc.
+2. **Arquive uma cópia imutável** em `<<REPO_PATH>>/.sprints/archive/<DATA-FIM-SPRINT>.md`, onde `<DATA-FIM-SPRINT>` é o último dia do sprint que está fechando, em formato `YYYY-MM-DD` (ex.: sprint 20–26/Abr → `2026-04-26.md`). Crie o diretório `.sprints/archive/` se ainda não existir. Se o arquivo já existir (rerun de `/sprint-close` no mesmo ciclo), sobrescreva — apenas a última revisão é mantida, e isso é intencional.
+
+O arquivo arquivado é a **fonte de contexto** que `/sprint-start` (PASSO 1b) lê na próxima sexta para preservar "On my mind", "On hold" e metas de Health entre sprints. Não apague — sobrescrever o `sprint-wip.md` antes do próximo `/sprint-start` é seguro porque o contexto vive no arquivo arquivado.

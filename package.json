@@ -1,5 +1,5 @@
 {
-  "name": "claude-sprint-review",
+  "name": "re-plan",
   "version": "1.0.0",
   "description": "Sprint review automation with Google Docs integration",
   "main": "upload-sprint.js",

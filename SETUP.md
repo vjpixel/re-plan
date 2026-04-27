@@ -67,7 +67,27 @@ APPS_SCRIPT_ID=your-script-id-here
 
 > **Migrating from `APPS_SCRIPT_DEPLOY_ID`:** if your existing `.env` uses the older variable name, just rename the key to `APPS_SCRIPT_ID`. The value (Script ID) is the same — earlier docs misnamed it as "Deployment ID", but `script.scripts.run` and `script.projects.get` always required the Script ID. See issue #5.
 
-### Step 6: Run the Workflow
+### Step 6: Install skill files
+
+The slash-command skill files (`sprint-start.md`, `sprint-update.md`, `sprint-close.md`) contain a `<<REPO_PATH>>` placeholder that needs to be replaced with the absolute path of your clone before Claude Code can use them.
+
+Run the install script — it materializes the skills into Claude Code's commands directory with the placeholder substituted:
+
+```bash
+bash install-skills.sh
+# or, with a custom destination:
+bash install-skills.sh /path/to/your/.claude/commands
+```
+
+The script:
+- Detects this clone's path (works on Linux, macOS, and git-bash for Windows)
+- Substitutes `<<REPO_PATH>>` in each skill file
+- Writes the materialized result to `~/.claude/commands/` (default)
+- Replaces any pre-existing symlink at the destination with a real file (avoids the placeholder reaching Claude Code through a back-link to the repo)
+
+Re-run after pulling updates that touch the skill files.
+
+### Step 7: Run the Workflow
 
 ```bash
 node upload-sprint.js
