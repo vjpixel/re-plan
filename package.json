@@ -7,6 +7,7 @@
     "upload": "node upload-sprint.js",
     "build": "node build.js",
     "check-sync": "node build.js --check",
+    "install-skills": "bash bin/install-skills.sh",
     "test": "node --test __tests__/parser.test.js __tests__/insert.test.js"
   },
   "engines": {

@@ -52,9 +52,9 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
-1. **Install the skill files** with `bash install-skills.sh` — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
-2. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names.
-3. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
+1. **Install the skill files** with `npm run install-skills` (or `bash bin/install-skills.sh`) — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
+2. **Adapt the project list** — the shipped `sprint-start.md` PASSO 4a/4c includes the maintainer's own projects (Diar.ia, Clarice, Jandig, …) as concrete examples. Replace those project names with your own; the Outputs/Outcomes structure stays.
+3. **Adjust the improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
 
 For the full Drive-upload setup (OAuth, Apps Script, `.env`), see [SETUP.md](SETUP.md).
 
@@ -65,9 +65,9 @@ The generated document follows this structure:
 ```
 [DATE] -------------------------------------
 Sprint Review ([period], X workdays)
-Outcomes
-Outputs
-  [by project]
+  Outcomes
+  Outputs
+    [by project]
 
 Sprint Retrospective
   Last week's improvement goals (with results)
@@ -78,9 +78,10 @@ Sprint Retrospective
 
 Sprint Planning ([next period])
   Week goal
-  Priority order
-  On my mind / On hold
-  Main Outputs
+  Projects Priority
+  On my mind
+  On hold
+  Outcomes        # numbered, one per active project, "Project → result"
   Next week's goals
 ```
 
