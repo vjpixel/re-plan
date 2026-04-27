@@ -28,7 +28,7 @@ Ao receber:
 
 ## PASSO 1b: Contexto do sprint anterior
 
-Antes de coletar dados, identifique o arquivo mais recente em `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/archive/` (nomes em formato `YYYY-MM-DD.md`, escolha a data mais recente) e leia-o. Esse arquivo é o snapshot imutável do último sprint fechado e é a fonte canônica de contexto entre sprints.
+Antes de coletar dados, identifique o arquivo mais recente em `<<REPO_PATH>>/.sprints/archive/` (nomes em formato `YYYY-MM-DD.md`, escolha a data mais recente) e leia-o. Esse arquivo é o snapshot imutável do último sprint fechado e é a fonte canônica de contexto entre sprints.
 
 Extraia, do Sprint Planning anterior:
 - Itens em **On my mind**
@@ -47,7 +47,7 @@ Aplique essas informações no PASSO 4c. Itens "On my mind" e "On hold" só são
 
 Metas de Health do sprint anterior servem como baseline para propor as próximas metas (ex.: se Sleep Score foi 70 com meta 85, propor algo como 77 — ajuste incremental, não otimista).
 
-Se o diretório `archive/` não existir ou estiver vazio (primeiro uso), prossiga sem contexto anterior.
+Se o diretório `archive/` não existir ou estiver vazio (primeiro uso), tente o fallback legacy `<<REPO_PATH>>/.sprints/sprint-final.md` (formato antigo, sprint anterior). Se nem isso existir, prossiga sem contexto anterior.
 
 ---
 
@@ -259,7 +259,7 @@ Aguarde confirmação antes de continuar.
 ## PASSO 5: Salvar rascunho
 
 Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo:
-`/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md`
+`<<REPO_PATH>>/.sprints/sprint-wip.md`
 
 Inclua no topo do arquivo:
 ```

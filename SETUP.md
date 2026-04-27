@@ -67,26 +67,25 @@ APPS_SCRIPT_ID=your-script-id-here
 
 > **Migrating from `APPS_SCRIPT_DEPLOY_ID`:** if your existing `.env` uses the older variable name, just rename the key to `APPS_SCRIPT_ID`. The value (Script ID) is the same — earlier docs misnamed it as "Deployment ID", but `script.scripts.run` and `script.projects.get` always required the Script ID. See issue #5.
 
-### Step 6: Configure repo path in skill files
+### Step 6: Install skill files
 
-The slash-command skill files (`sprint-start.md`, `sprint-update.md`, `sprint-close.md`) reference an absolute path to this repo's `.sprints/` directory so Claude Code knows where to read/write the wip and archive files. The shipped value is the maintainer's path: `/c/Users/vjpix/OneDrive/Documentos/Re-plan`.
+The slash-command skill files (`sprint-start.md`, `sprint-update.md`, `sprint-close.md`) contain a `<<REPO_PATH>>` placeholder that needs to be replaced with the absolute path of your clone before Claude Code can use them.
 
-Before copying the skill files into `~/.claude/commands/`, rewrite the path to match your clone:
-
-```bash
-# from the repo root, on git-bash / WSL
-REPO_PATH="$(pwd | sed 's|^\([A-Za-z]\):|/\L\1|')"   # e.g. /c/Users/me/code/re-plan
-sed -i "s|/c/Users/vjpix/OneDrive/Documentos/Re-plan|${REPO_PATH}|g" \
-  sprint-start.md sprint-update.md sprint-close.md
-```
-
-Then copy them into Claude Code's commands directory:
+Run the install script — it materializes the skills into Claude Code's commands directory with the placeholder substituted:
 
 ```bash
-cp sprint-start.md sprint-update.md sprint-close.md ~/.claude/commands/
+bash install-skills.sh
+# or, with a custom destination:
+bash install-skills.sh /path/to/your/.claude/commands
 ```
 
-(Or symlink if you'd rather edit in place.)
+The script:
+- Detects this clone's path (works on Linux, macOS, and git-bash for Windows)
+- Substitutes `<<REPO_PATH>>` in each skill file
+- Writes the materialized result to `~/.claude/commands/` (default)
+- Replaces any pre-existing symlink at the destination with a real file (avoids the placeholder reaching Claude Code through a back-link to the repo)
+
+Re-run after pulling updates that touch the skill files.
 
 ### Step 7: Run the Workflow
 
