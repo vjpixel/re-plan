@@ -74,9 +74,9 @@ The slash-command skill files (`sprint-start.md`, `sprint-update.md`, `sprint-cl
 Run the install script — it materializes the skills into Claude Code's commands directory with the placeholder substituted:
 
 ```bash
-bash install-skills.sh
+npm run install-skills
 # or, with a custom destination:
-bash install-skills.sh /path/to/your/.claude/commands
+bash bin/install-skills.sh /path/to/your/.claude/commands
 ```
 
 The script:

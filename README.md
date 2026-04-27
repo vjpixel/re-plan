@@ -52,7 +52,7 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
-1. **Install the skill files** with `bash install-skills.sh` — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
+1. **Install the skill files** with `npm run install-skills` (or `bash bin/install-skills.sh`) — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
 2. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names.
 3. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
 
