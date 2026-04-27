@@ -140,6 +140,26 @@ Gere e exiba **apenas o Sprint Review**. Marque campos incompletos com `[PENDING
 - Nunca incluir test sends da Diar.ia
 - Nunca incluir pedidos/entregas Amazon
 
+**Sub-projetos** (ferramentas, repos ou sub-domínios usados a serviço de uma parent project listada) entram como sub-bullets sob o parent — nunca como seção própria. Use o nome do sub-projeto como prefixo do bullet.
+
+Hierarquia atual (atualize quando a estrutura mudar):
+
+| Parent | Sub-projetos |
+| :----- | :----------- |
+| `Diar.ia` | `humanizador`, `diaria-studio` |
+
+Exemplo:
+
+```
+**Diar.ia**
+
+* 4 editions
+* PR #179: fewer confirmations in social publishing flow
+* humanizador: 5 issues refining text humanization spec (padrão #27)
+```
+
+Antes de criar uma seção `**X**` nova, verifique se `X` é sub-projeto de algum parent listado acima — se sim, use sub-bullet.
+
 Após exibir, pergunte: **"Review OK? Algo para ajustar?"**
 Aguarde confirmação antes de continuar.
 
