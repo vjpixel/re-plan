@@ -52,13 +52,16 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
-1. Copy `sprint-start.md`, `sprint-update.md`, and `sprint-close.md` to `~/.claude/commands/`
-2. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names
-3. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`)
+1. **Rewrite the repo path** in the skill files to match your clone (the shipped value is the maintainer's). See [SETUP.md → Step 6](SETUP.md#step-6-configure-repo-path-in-skill-files) for the one-line `sed` invocation.
+2. Copy `sprint-start.md`, `sprint-update.md`, and `sprint-close.md` to `~/.claude/commands/`.
+3. Edit the **Outputs** section in `sprint-start.md` to replace `[Project 1]`, `[Project 2]`, `[Project 3]` with your own project names.
+4. Edit the **improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
 
 ```bash
 cp sprint-start.md sprint-update.md sprint-close.md ~/.claude/commands/
 ```
+
+For the full Drive-upload setup (OAuth, Apps Script, `.env`), see [SETUP.md](SETUP.md).
 
 ## Document format
 

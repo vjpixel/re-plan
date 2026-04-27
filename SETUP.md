@@ -67,7 +67,28 @@ APPS_SCRIPT_ID=your-script-id-here
 
 > **Migrating from `APPS_SCRIPT_DEPLOY_ID`:** if your existing `.env` uses the older variable name, just rename the key to `APPS_SCRIPT_ID`. The value (Script ID) is the same — earlier docs misnamed it as "Deployment ID", but `script.scripts.run` and `script.projects.get` always required the Script ID. See issue #5.
 
-### Step 6: Run the Workflow
+### Step 6: Configure repo path in skill files
+
+The slash-command skill files (`sprint-start.md`, `sprint-update.md`, `sprint-close.md`) reference an absolute path to this repo's `.sprints/` directory so Claude Code knows where to read/write the wip and archive files. The shipped value is the maintainer's path: `/c/Users/vjpix/OneDrive/Documentos/Re-plan`.
+
+Before copying the skill files into `~/.claude/commands/`, rewrite the path to match your clone:
+
+```bash
+# from the repo root, on git-bash / WSL
+REPO_PATH="$(pwd | sed 's|^\([A-Za-z]\):|/\L\1|')"   # e.g. /c/Users/me/code/re-plan
+sed -i "s|/c/Users/vjpix/OneDrive/Documentos/Re-plan|${REPO_PATH}|g" \
+  sprint-start.md sprint-update.md sprint-close.md
+```
+
+Then copy them into Claude Code's commands directory:
+
+```bash
+cp sprint-start.md sprint-update.md sprint-close.md ~/.claude/commands/
+```
+
+(Or symlink if you'd rather edit in place.)
+
+### Step 7: Run the Workflow
 
 ```bash
 node upload-sprint.js
