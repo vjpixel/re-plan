@@ -1,6 +1,6 @@
-# claude-sprint-review
+# Re-plan
 
-Claude Code slash commands for a two-stage weekly sprint review and planning workflow.
+Claude Code slash commands for a two-stage weekly sprint review and planning workflow. (Originally published as `claude-sprint-review`; the canonical project name is now `re-plan`, matching the GitHub repository.)
 
 ## How it works
 
