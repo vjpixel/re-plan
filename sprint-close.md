@@ -66,4 +66,13 @@ Faça apenas 2 perguntas em uma mensagem:
 
 Incorpore o feedback e entregue a versão final pronta para copiar para o Google Docs.
 
-Mantenha o arquivo `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md` no lugar — `upload-sprint.js` lê esse arquivo para inserir a review no Google Doc. Apague manualmente quando não precisar mais.
+---
+
+## PASSO 6: Salvar e arquivar
+
+Após a versão final estar aprovada:
+
+1. **Sobrescreva `.sprints/sprint-wip.md`** com o conteúdo final limpo (sem `[PENDING]`, sem comentários). Esse é o arquivo que `upload-sprint.js` envia para o Google Doc.
+2. **Arquive uma cópia imutável** em `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/archive/<DATA-FIM-SPRINT>.md`, onde `<DATA-FIM-SPRINT>` é o último dia do sprint que está fechando, em formato `YYYY-MM-DD` (ex.: sprint 20–26/Abr → `2026-04-26.md`). Crie o diretório `.sprints/archive/` se ainda não existir.
+
+O arquivo arquivado é a **fonte de contexto** que `/sprint-start` (PASSO 1b) lê na próxima sexta para preservar "On my mind", "On hold" e metas de Health entre sprints. Não apague — sobrescrever o `sprint-wip.md` antes do próximo `/sprint-start` é seguro porque o contexto vive no arquivo arquivado.

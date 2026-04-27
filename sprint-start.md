@@ -28,18 +28,26 @@ Ao receber:
 
 ## PASSO 1b: Contexto do sprint anterior
 
-Antes de coletar dados, leia `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/sprint-wip.md` (se existir).
+Antes de coletar dados, identifique o arquivo mais recente em `/c/Users/vjpix/OneDrive/Documentos/Re-plan/.sprints/archive/` (nomes em formato `YYYY-MM-DD.md`, escolha a data mais recente) e leia-o. Esse arquivo é o snapshot imutável do último sprint fechado e é a fonte canônica de contexto entre sprints.
 
 Extraia, do Sprint Planning anterior:
 - Itens em **On my mind**
 - Itens em **On hold**
 - Metas de **Health** (Meditate, Exercise, Sleep Score)
 
-Use essas informações no PASSO 4c:
-- "On my mind" e "On hold" são preservados no novo Planning a menos que haja sinal de mudança (item resolvido, projeto retomado, decisão recebida)
-- Metas de Health do sprint anterior servem como baseline para propor as próximas metas
+Aplique essas informações no PASSO 4c. Itens "On my mind" e "On hold" só são removidos quando há sinal **explícito** nos dados coletados no PASSO 2 — nunca por inferência genérica:
 
-Se o arquivo não existir, prossiga sem contexto anterior.
+- Remover de **On my mind** se:
+  - Tarefa correspondente foi concluída em TickTick no período do sprint, OU
+  - Email de aprovação/decisão/resposta chegou em Gmail (ex.: recrutador respondeu, parceiro confirmou)
+- Mover de **On hold** para **Projects Priority** se:
+  - O bloqueador (pessoa/decisão externa) respondeu por email/calendário, OU
+  - Tarefas associadas ao projeto foram reativadas em TickTick (saíram do estado "aguardando")
+- Caso contrário, preservar o item exatamente como está no arquivo arquivado.
+
+Metas de Health do sprint anterior servem como baseline para propor as próximas metas (ex.: se Sleep Score foi 70 com meta 85, propor algo como 77 — ajuste incremental, não otimista).
+
+Se o diretório `archive/` não existir ou estiver vazio (primeiro uso), prossiga sem contexto anterior.
 
 ---
 
