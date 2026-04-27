@@ -10,6 +10,19 @@ Ao receber:
 - Converta para ISO 8601
 - Calcule dias úteis do sprint
 - Identifique: data de hoje é o último dia útil do sprint
+- Calcule também os dias úteis do **próximo** sprint (período seguinte de mesma duração) para uso no Sprint Planning. Ao calcular, **subtraia feriados nacionais** que caiam dentro do período. Quando houver feriado, anote-o explicitamente no header do Planning (ex.: `Sprint Planning *(27/Abr–3/Mai, 4 workdays — 1/Mai feriado)*`).
+
+**Feriados nacionais brasileiros a considerar:**
+- 1/Jan — Ano Novo
+- Sexta-feira Santa (variável; 2 dias antes da Páscoa)
+- 21/Abr — Tiradentes
+- 1/Mai — Dia do Trabalho
+- 7/Set — Independência
+- 12/Out — Nossa Senhora Aparecida
+- 2/Nov — Finados
+- 15/Nov — Proclamação da República
+- 20/Nov — Consciência Negra
+- 25/Dez — Natal
 
 ---
 
@@ -88,8 +101,17 @@ Gere e exiba **apenas o Sprint Review**. Marque campos incompletos com `[PENDING
 ```
 
 **Regras de classificação:**
-- **Outcomes** = o que mudou no mundo (decisões tomadas, acordos fechados, diagnósticos, marcos). Nunca incluir publicações, reuniões ou consultas — só o resultado concreto que produziram.
-- **Outputs** = o que foi produzido (código, documentos, edições, relatórios). Nunca listar edições individualmente — usar contagem ("Published X editions").
+- **Outcomes** = o que mudou no mundo: decisões tomadas, acordos fechados, status alterado, marcos atingidos. Pergunte: *"isso mudou o estado do mundo, ou só produziu um artefato/comunicação?"*. Se só produziu, é Output.
+  - Outcomes: aprovação recebida, contratado/aprovado num assessment, conta encerrada, proposta aceita, decisão final tomada.
+  - **Não-Outcomes:** submeter proposta, enviar currículo, abrir PR, publicar edição — esses são Outputs (o artefato existe; o mundo ainda não mudou).
+- **Outputs** = o que foi produzido/entregue (código, documentos, edições, relatórios, submissões).
+  - **Bullets de Output devem começar com um substantivo (noun phrase), não com verbo.** Remova o verbo introdutório e deixe o artefato/quantidade falar por si.
+    - ✗ "Sent resume to Google" → ✓ "Google resume + Hiring Assessment"
+    - ✗ "Published 4 editions" → ✓ "4 editions"
+    - ✗ "Opened PR #179: reduce confirmations" → ✓ "PR #179: fewer confirmations in social publishing flow"
+    - ✗ "Submitted Plano de Capacitação" → ✓ "Plano de Capacitação"
+  - Se o item não consegue se sustentar sem o verbo, provavelmente não é output-level.
+  - Nunca listar edições individualmente — usar contagem ("4 editions").
 - Nunca incluir test sends da Diar.ia
 - Nunca incluir pedidos/entregas Amazon
 
@@ -194,6 +216,15 @@ Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**.
 - Health goals: sempre propor números concretos — nunca deixar [PENDING]
 - "On my mind" e "On hold": preservar os itens do sprint anterior se não houver indicação de mudança
 - Outcomes: propor um resultado concreto por projeto ativo — o que tornaria o sprint bem-sucedido para aquele projeto
+
+**Detecção de projetos bloqueados em terceiros:**
+
+Antes de listar um projeto em **Projects Priority**, verifique se *todas* as tarefas abertas dele são do tipo "aguardando resposta externa". Sinais:
+- Títulos contendo: `await`, `aguardar`, `waiting for`, `esperando`, `pending response`, `pendente de`, `seguir o processo`, `acompanhar resposta`
+- Eventos de calendário sem follow-up acionável
+- Itens "On Hold" do sprint anterior sem mudança de status
+
+Se sim, o projeto vai para **On Hold** no Planning, não para Projects Priority. Adicione uma nota curta explicando o bloqueio (ex.: "Job Hunt — aguardando resposta da Google").
 
 Após exibir, pergunte: **"Planning OK? Algo para ajustar?"**
 Aguarde confirmação antes de continuar.

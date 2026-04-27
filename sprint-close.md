@@ -50,6 +50,10 @@ Mescle o rascunho com os novos dados:
 - Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes
 - Ajuste o Sprint Planning se necessário
 
+**Ao adicionar Outputs/Outcomes**, siga as mesmas regras do `/sprint-start`:
+- **Outcome** = o estado do mundo mudou (aprovação recebida, decisão final, conta encerrada). Submeter / enviar / abrir / publicar é **Output**, não Outcome.
+- **Outputs** começam com substantivo, não com verbo. ✗ "Sent resume to Google" → ✓ "Google resume". ✗ "Published 4 editions" → ✓ "4 editions".
+
 Entregue o documento final limpo (sem `[PENDING]`, sem comentários), **no mesmo formato markdown do rascunho** (headers `#`/`##`/`###`, bullets `*`, tabelas com `:----`, listas numeradas para prioridades e outputs) — pronto para copy/paste direto no Google Docs.
 
 ---
