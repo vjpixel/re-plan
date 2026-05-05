@@ -7,112 +7,137 @@ function d(iso: string): Date {
   return new Date(y, m - 1, day);
 }
 
-// inferCurrentPeriod
+// inferCurrentPeriod — Mon–Sun fixed-week model
 
-test('inferCurrentPeriod: Friday → starts preceding Monday', () => {
-  const result = inferCurrentPeriod(d('2026-05-08')); // Friday
-  assert.equal(result.start, '2026-05-04');
-  assert.equal(result.end, '2026-05-08');
-  assert.equal(result.workdays, 5);
-  assert.deepEqual(result.holidays, []);
+test('inferCurrentPeriod: Tuesday → closes previous Mon–Sun week', () => {
+  // Tue 5/May → last Sun = 3/May → start = 27/Apr; May 1 is holiday
+  const r = inferCurrentPeriod(d('2026-05-05'));
+  assert.equal(r.start, '2026-04-27');
+  assert.equal(r.end, '2026-05-03');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-05-01']);
 });
 
-test('inferCurrentPeriod: Monday → starts previous Monday (7 days back)', () => {
-  const result = inferCurrentPeriod(d('2026-05-04')); // Monday
-  assert.equal(result.start, '2026-04-27');
-  assert.equal(result.end, '2026-05-04');
-  // Apr 27–May 4: Mon Apr 27, Tue 28, Wed 29, Thu 30, [May 1 holiday], Sat, Sun, Mon May 4 = 5 workdays
-  assert.equal(result.workdays, 5);
-  assert.deepEqual(result.holidays, ['2026-05-01']);
+test('inferCurrentPeriod: Friday → closes previous Mon–Sun week (current still in progress)', () => {
+  // Fri 8/May → last Sun = 3/May → start = 27/Apr; May 1 is holiday
+  const r = inferCurrentPeriod(d('2026-05-08'));
+  assert.equal(r.start, '2026-04-27');
+  assert.equal(r.end, '2026-05-03');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-05-01']);
 });
 
-test('inferCurrentPeriod: week containing Dia do Trabalho (May 1)', () => {
-  const result = inferCurrentPeriod(d('2026-04-30')); // Thursday before May 1
-  assert.equal(result.start, '2026-04-27');
-  assert.equal(result.end, '2026-04-30');
-  assert.equal(result.workdays, 4);
-  assert.deepEqual(result.holidays, []);
+test('inferCurrentPeriod: Saturday → closes previous Mon–Sun week (current still in progress)', () => {
+  // Sat 9/May → last Sun = 3/May → start = 27/Apr; May 1 is holiday
+  const r = inferCurrentPeriod(d('2026-05-09'));
+  assert.equal(r.start, '2026-04-27');
+  assert.equal(r.end, '2026-05-03');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-05-01']);
 });
 
-test('inferCurrentPeriod: Good Friday 2026 (April 3)', () => {
-  const result = inferCurrentPeriod(d('2026-04-03')); // Friday = Good Friday
-  assert.equal(result.start, '2026-03-30');
-  assert.equal(result.end, '2026-04-03');
-  // Mon–Fri, but Fri is holiday → 4 workdays
-  assert.equal(result.workdays, 4);
-  assert.deepEqual(result.holidays, ['2026-04-03']);
+test('inferCurrentPeriod: range spanning year boundary picks up Jan 1 holiday', () => {
+  // Wed 6/Jan/2027 → last Sun = 3/Jan/2027 → start = 28/Dec/2026
+  // Jan 1, 2027 is in range → 4 workdays (Mon Dec 28, Tue 29, Wed 30, Thu 31, [Fri Jan 1 holiday])
+  const r = inferCurrentPeriod(d('2027-01-06'));
+  assert.equal(r.start, '2026-12-28');
+  assert.equal(r.end, '2027-01-03');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2027-01-01']);
 });
 
-test('inferCurrentPeriod: Good Friday 2025 (April 18)', () => {
-  const result = inferCurrentPeriod(d('2025-04-18')); // Friday = Good Friday
-  assert.equal(result.start, '2025-04-14');
-  assert.equal(result.end, '2025-04-18');
-  assert.equal(result.workdays, 4);
-  assert.deepEqual(result.holidays, ['2025-04-18']);
+test('inferCurrentPeriod: Sunday → closes the week that ended today', () => {
+  // Sun 10/May → last Sun = 10/May → start = 4/May; no holidays
+  const r = inferCurrentPeriod(d('2026-05-10'));
+  assert.equal(r.start, '2026-05-04');
+  assert.equal(r.end, '2026-05-10');
+  assert.equal(r.workdays, 5);
+  assert.deepEqual(r.holidays, []);
 });
 
-test('inferCurrentPeriod: Wednesday mid-week run', () => {
-  const result = inferCurrentPeriod(d('2026-05-06')); // Wednesday
-  assert.equal(result.start, '2026-05-04');
-  assert.equal(result.end, '2026-05-06');
-  assert.equal(result.workdays, 3);
-  assert.deepEqual(result.holidays, []);
+test('inferCurrentPeriod: Monday → closes previous Mon–Sun week (new week just started)', () => {
+  // Mon 4/May → last Sun = 3/May → start = 27/Apr; May 1 is holiday
+  const r = inferCurrentPeriod(d('2026-05-04'));
+  assert.equal(r.start, '2026-04-27');
+  assert.equal(r.end, '2026-05-03');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-05-01']);
 });
 
-// nextPeriod
-
-test('nextPeriod: after normal Friday → following Mon–Fri, no holidays', () => {
-  const result = nextPeriod(d('2026-05-08'), 5); // Friday
-  assert.equal(result.start, '2026-05-11');
-  assert.equal(result.end, '2026-05-15');
-  assert.equal(result.workdays, 5);
-  assert.deepEqual(result.holidays, []);
+test('inferCurrentPeriod: week with no holidays has 5 workdays', () => {
+  // Thu 14/May → last Sun = 10/May → start = 4/May; no holidays
+  const r = inferCurrentPeriod(d('2026-05-14'));
+  assert.equal(r.start, '2026-05-04');
+  assert.equal(r.end, '2026-05-10');
+  assert.equal(r.workdays, 5);
+  assert.deepEqual(r.holidays, []);
 });
 
-test('nextPeriod: after Apr 30 (Thu) with 4 workdays → May 4–7', () => {
-  const result = nextPeriod(d('2026-04-30'), 4);
-  assert.equal(result.start, '2026-05-04');
-  assert.equal(result.end, '2026-05-07');
-  assert.equal(result.workdays, 4);
-  assert.deepEqual(result.holidays, []);
+test('inferCurrentPeriod: Good Friday 2026 (April 3) in sprint week', () => {
+  // Thu 9/Apr/2026 → last Sun = 5/Apr → start = 30/Mar; Good Friday Apr 3 is in range
+  const r = inferCurrentPeriod(d('2026-04-09'));
+  assert.equal(r.start, '2026-03-30');
+  assert.equal(r.end, '2026-04-05');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-04-03']);
 });
 
-test('nextPeriod: holiday within next period reduces available days, extends end', () => {
-  // Sprint ending Apr 24 (Fri) with 5 workdays → next starts Apr 27 (Mon)
-  // Apr 27–May 1 has May 1 as holiday → need to go to May 4 to get 5 workdays
-  const result = nextPeriod(d('2026-04-24'), 5);
-  assert.equal(result.start, '2026-04-27');
-  assert.equal(result.end, '2026-05-04'); // Mon Apr 27,Tue 28,Wed 29,Thu 30,[May1 hol],Sat,Sun,Mon May 4
-  assert.equal(result.workdays, 5);
-  assert.deepEqual(result.holidays, ['2026-05-01']);
+test('inferCurrentPeriod: week containing Tiradentes (Apr 21) has 4 workdays', () => {
+  // Mon 27/Apr → last Sun = 26/Apr → start = 20/Apr; Tiradentes 21/Apr in range → 4 workdays
+  const r = inferCurrentPeriod(d('2026-04-27'));
+  assert.equal(r.start, '2026-04-20');
+  assert.equal(r.end, '2026-04-26');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-04-21']);
 });
 
-test('nextPeriod: after Monday → next Monday is 7 days later', () => {
-  const result = nextPeriod(d('2026-05-04'), 5); // Monday
-  assert.equal(result.start, '2026-05-11');
-  assert.equal(result.end, '2026-05-15');
-  assert.equal(result.workdays, 5);
-  assert.deepEqual(result.holidays, []);
+// nextPeriod — always Mon–Sun, 7 calendar days
+
+test('nextPeriod: follows Sun 3/May → Mon 4 – Sun 10/May, 5 workdays', () => {
+  const r = nextPeriod(d('2026-05-03'));
+  assert.equal(r.start, '2026-05-04');
+  assert.equal(r.end, '2026-05-10');
+  assert.equal(r.workdays, 5);
+  assert.deepEqual(r.holidays, []);
+});
+
+test('nextPeriod: follows Sun 26/Apr (week with Tiradentes) → 27/Apr–3/May, 4 workdays (May 1 holiday)', () => {
+  const r = nextPeriod(d('2026-04-26'));
+  assert.equal(r.start, '2026-04-27');
+  assert.equal(r.end, '2026-05-03');
+  assert.equal(r.workdays, 4);
+  assert.deepEqual(r.holidays, ['2026-05-01']);
+});
+
+test('nextPeriod: always 7 calendar days (Mon–Sun)', () => {
+  const r = nextPeriod(d('2026-05-10'));
+  assert.equal(r.start, '2026-05-11');
+  assert.equal(r.end, '2026-05-17');
+});
+
+test('nextPeriod: throws if currentEnd is not a Sunday', () => {
+  // Mon 4/May (dow=1) → invalid input
+  assert.throws(() => nextPeriod(d('2026-05-04')), /expects a Sunday/);
 });
 
 // formatPeriodHeader
 
 test('formatPeriodHeader: no holidays', () => {
-  const h = formatPeriodHeader({ start: '2026-05-04', end: '2026-05-08', workdays: 5, holidays: [] });
-  assert.equal(h, '4/Mai–8/Mai, 5 workdays');
+  const h = formatPeriodHeader({ start: '2026-05-04', end: '2026-05-10', workdays: 5, holidays: [] });
+  assert.equal(h, '4/Mai–10/Mai, 5 workdays');
 });
 
 test('formatPeriodHeader: one holiday', () => {
-  const h = formatPeriodHeader({ start: '2026-04-27', end: '2026-05-04', workdays: 5, holidays: ['2026-05-01'] });
-  assert.equal(h, '27/Abr–4/Mai, 5 workdays — 1/Mai feriado');
+  const h = formatPeriodHeader({ start: '2026-04-27', end: '2026-05-03', workdays: 4, holidays: ['2026-05-01'] });
+  assert.equal(h, '27/Abr–3/Mai, 4 workdays — 1/Mai feriado');
 });
 
 test('formatPeriodHeader: multiple holidays', () => {
   const h = formatPeriodHeader({
-    start: '2026-04-20', end: '2026-04-24', workdays: 3,
-    holidays: ['2026-04-21', '2026-04-22'],
+    start: '2026-04-20', end: '2026-04-26', workdays: 4,
+    holidays: ['2026-04-21'],
   });
-  assert.equal(h, '20/Abr–24/Abr, 3 workdays — 21/Abr, 22/Abr feriado');
+  assert.equal(h, '20/Abr–26/Abr, 4 workdays — 21/Abr feriado');
 });
 
 // toISO utility

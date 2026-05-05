@@ -69,7 +69,7 @@ async function main(): Promise<void> {
       })();
       const current = inferCurrentPeriod(today);
       const currentEnd = parseLocalDate(current.end);
-      const next = nextPeriod(currentEnd, current.workdays);
+      const next = nextPeriod(currentEnd);
       out({ current, next });
       break;
     }

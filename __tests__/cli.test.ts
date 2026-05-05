@@ -36,9 +36,14 @@ test('cli: period --today returns current+next JSON to stdout', () => {
   const r = run(['period', '--today', '2026-05-04']);
   assert.equal(r.status, 0, r.stderr);
   const json = JSON.parse(r.stdout);
+  // Mon 4/May → last Sun = 3/May → Mon–Sun week 27/Apr–3/May (May 1 holiday → 4 workdays)
   assert.equal(json.current.start, '2026-04-27');
-  assert.equal(json.current.end, '2026-05-04');
-  assert.equal(json.next.start, '2026-05-11');
+  assert.equal(json.current.end, '2026-05-03');
+  assert.equal(json.current.workdays, 4);
+  // Next: Mon 4/May–Sun 10/May (5 workdays)
+  assert.equal(json.next.start, '2026-05-04');
+  assert.equal(json.next.end, '2026-05-10');
+  assert.equal(json.next.workdays, 5);
 });
 
 test('cli: period rejects bad date format', () => {

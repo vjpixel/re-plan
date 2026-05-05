@@ -43,41 +43,34 @@ function countWorkdays(start: Date, end: Date, holidays: Date[]): number {
 }
 
 export function inferCurrentPeriod(today: Date): Period {
+  // Sprints are fixed Mon–Sun calendar weeks. The closing sprint is the most
+  // recently completed Mon–Sun week (end = last Sunday ≤ today).
   const dow = today.getDay(); // 0=Sun … 6=Sat
-  // Last Monday strictly before today; if today is Monday (1), go back 7 days.
-  const daysBack = ((dow - 1 + 7) % 7) || 7;
-  const start = addDays(today, -daysBack);
-  const holidays = holidaysBetween(start, today);
+  const end = addDays(today, -dow); // rewind to Sunday (0 days if today is Sun)
+  const start = addDays(end, -6);   // Monday = Sunday − 6
+  const holidays = holidaysBetween(start, end);
   return {
     start: toISO(start),
-    end: toISO(today),
-    workdays: countWorkdays(start, today, holidays),
+    end: toISO(end),
+    workdays: countWorkdays(start, end, holidays),
     holidays: holidays.map(toISO),
   };
 }
 
-export function nextPeriod(currentEnd: Date, currentWorkdays: number): Period {
-  // Next sprint always starts the following Monday.
-  const dow = currentEnd.getDay();
-  const daysToMonday = dow === 0 ? 1 : 8 - dow;
-  const start = addDays(currentEnd, daysToMonday);
-
-  // Walk forward until we've accumulated currentWorkdays workdays.
-  const upperBound = addDays(start, currentWorkdays * 3); // generous
-  const allHolidays = holidaysBetween(start, upperBound);
-  let d = new Date(start);
-  let count = 0;
-  while (count < currentWorkdays) {
-    if (isWorkday(d, allHolidays)) count++;
-    if (count < currentWorkdays) d = addDays(d, 1);
+export function nextPeriod(currentEnd: Date): Period {
+  // Next sprint: the Mon–Sun week immediately following currentEnd.
+  // currentEnd must be a Sunday (the canonical output of inferCurrentPeriod).
+  if (currentEnd.getDay() !== 0) {
+    throw new Error(`nextPeriod expects a Sunday, got ${toISO(currentEnd)} (dow=${currentEnd.getDay()})`);
   }
-  const end = d;
-  const periodHolidays = holidaysBetween(start, end);
+  const start = addDays(currentEnd, 1); // Monday
+  const end = addDays(start, 6);        // Sunday
+  const holidays = holidaysBetween(start, end);
   return {
     start: toISO(start),
     end: toISO(end),
-    workdays: currentWorkdays,
-    holidays: periodHolidays.map(toISO),
+    workdays: countWorkdays(start, end, holidays),
+    holidays: holidays.map(toISO),
   };
 }
 
