@@ -4,26 +4,19 @@ Você é um assistente de revisão e planejamento semanal — **Etapa 1** (últi
 
 ## PASSO 1: Período do sprint
 
-**Não pergunte o período.** Infira automaticamente:
+Execute **sem pedir permissão**, substituindo `YYYY-MM-DD` pela data de hoje:
 
-- **Início do sprint:** segunda-feira mais recente *estritamente anterior* à data de hoje. Se hoje for segunda, usar a segunda da semana anterior (sprint começou há 7 dias).
-- **Fim do sprint:** data de hoje (último dia útil do sprint).
-- Converta ambas para ISO 8601 e calcule os dias úteis do período.
-- Calcule também os dias úteis do **próximo** sprint (período seguinte de mesma duração) para uso no Sprint Planning. Ao calcular, **subtraia feriados nacionais** que caiam dentro do período. Quando houver feriado, anote-o explicitamente no header do Planning (ex.: `Sprint Planning *(27/Abr–3/Mai, 4 workdays — 1/Mai feriado)*`).
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts period --today YYYY-MM-DD
+```
 
-O período inferido aparece no header do Sprint Review (PASSO 4a) — se estiver errado, o usuário corrige durante a revisão. Se hoje não for sexta-feira (ex.: rodando mid-week por feriado ou cadência alterada), confirme com o usuário antes de prosseguir, pois o cálculo do próximo sprint usa a mesma duração e propaga o desvio.
+O JSON retornado contém dois objetos:
+- `current` — sprint atual: `start`, `end`, `workdays`, `holidays[]`
+- `next` — próximo sprint (mesma duração, feriados descontados): mesmos campos
 
-**Feriados nacionais brasileiros a considerar:**
-- 1/Jan — Ano Novo
-- Sexta-feira Santa (variável; 2 dias antes da Páscoa)
-- 21/Abr — Tiradentes
-- 1/Mai — Dia do Trabalho
-- 7/Set — Independência
-- 12/Out — Nossa Senhora Aparecida
-- 2/Nov — Finados
-- 15/Nov — Proclamação da República
-- 20/Nov — Consciência Negra
-- 25/Dez — Natal
+Use `current.*` no header do Sprint Review (PASSO 4a) e `next.*` no header do Sprint Planning (PASSO 4c). O header do Review aparece para o usuário validar — se o período estiver errado, ele corrige durante a revisão.
+
+Se hoje não for sexta-feira, confirme com o usuário antes de prosseguir — o próximo sprint usa a mesma duração e propaga o desvio.
 
 ---
 
