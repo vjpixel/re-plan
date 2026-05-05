@@ -49,14 +49,17 @@ Execute em paralelo **sem pedir permissão**:
 - `list_projects` (TickTick)
 - `gcal_list_calendars` (Google Calendar)
 
-**Lote B** (com IDs em mãos):
-- `list_completed_tasks_by_date` (TickTick) — início do sprint até agora
+**Lote B** (com IDs em mãos, período = `current.start` a `current.end` do PASSO 1):
+- `list_completed_tasks_by_date` (TickTick) — `current.start` até `current.end`
 - `list_undone_tasks_by_date` (TickTick) — tarefas abertas
-- `gcal_list_events` — eventos do sprint até hoje; depois filtre conforme abaixo
-- `gmail_search_messages` — emails do período; depois filtre conforme abaixo
+- `gcal_list_events` — `current.start` até `current.end`; depois filtre conforme abaixo
+- `gmail_search_messages` — mesmo período; depois filtre conforme abaixo
 - `gh api "/users/vjpixel/events?per_page=50"` (GitHub); depois filtre conforme abaixo
+- **Claude Code transcripts** — calcule `dayAfterEnd` = dia seguinte a `current.end` em formato `YYYY-MM-DD` (ex.: `current.end=2026-05-03` → `dayAfterEnd=2026-05-04`), então rode (substituindo as duas datas literalmente): `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt 'current.start' ! -newermt 'dayAfterEnd'`. Para cada arquivo top-level, extraia: primeira mensagem do usuário (objetivo), última mensagem do assistente (resultado), PRs/issues referenciados. **Delegue a um subagente Explore** para não poluir o contexto principal.
 
-Para cada um dos três acima, passe a resposta JSON via heredoc (evita problemas de quoting com aspas, backticks, `$`, etc.):
+**Filtro obrigatório.** Após CADA chamada MCP (`gcal_list_events`, `gmail_search_messages`, `gh api events`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
+
+Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
@@ -64,7 +67,7 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
 JSON
 ```
 
-Use `filter-gmail` (sem flags) e `filter-github --start YYYY-MM-DD --end YYYY-MM-DD` para os outros dois. Cada comando lê do stdin e retorna o array filtrado em stdout.
+Use `filter-gmail` (sem flags) e `filter-github --start current.start --end current.end` para os outros dois. Cada comando lê do stdin e retorna o array filtrado em stdout.
 
 ---
 
@@ -126,6 +129,16 @@ Gere e exiba **apenas o Sprint Review**. Marque campos incompletos com `[PENDING
 ```
 
 **Regras de classificação:**
+
+**Output language is English.** All Outcomes, Outputs, narratives, and table entries must be written in English regardless of source-data language (TickTick titles in PT-BR, Gmail subjects, etc.). Translate Portuguese task titles into English noun phrases.
+
+**Timestamp guard.** Every Outcome and Output must have a timestamp inside `[current.start, current.end]` (inclusive, local timezone). Work done after `current.end` belongs to the next sprint — do not include catch-up work from gap days.
+
+**Exclusions** (never list as Outputs or Outcomes):
+- Stats/analytics summaries from third parties (Beehiiv recaps, GitHub star counts) — these are observations, not outputs. May inform the Retro; never the Review.
+- Incoming communications (received emails, replies, DMs) — the user didn't produce these.
+- Calendar events the user did NOT accept (`myResponseStatus !== 'accepted'`) — often other people's schedules shared with the user, not the user's commitments.
+
 - **Outcomes** = o que mudou no mundo: decisões tomadas, acordos fechados, status alterado, marcos atingidos. Pergunte: *"isso mudou o estado do mundo, ou só produziu um artefato/comunicação?"*. Se só produziu, é Output.
   - Outcomes: aprovação recebida, contratado/aprovado num assessment, conta encerrada, proposta aceita, decisão final tomada.
   - **Não-Outcomes:** submeter proposta, enviar currículo, abrir PR, publicar edição — esses são Outputs (o artefato existe; o mundo ainda não mudou).
@@ -167,7 +180,7 @@ Aguarde confirmação antes de continuar.
 
 ## PASSO 4b: Sprint Retrospective
 
-Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**.
+Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. All generated content must be in English (see PASSO 4a for the full rule).
 
 ```
 ## Sprint Retrospective *([período], X workdays)*
@@ -213,7 +226,7 @@ Aguarde confirmação antes de continuar.
 
 ## PASSO 4c: Sprint Planning
 
-Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**.
+Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All generated content must be in English (see PASSO 4a for the full rule).
 
 ```
 ## Sprint Planning *([próximo período], X workdays)*

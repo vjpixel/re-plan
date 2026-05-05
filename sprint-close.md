@@ -17,12 +17,15 @@ Informe ao usuário: "Encontrei o rascunho do sprint [period]. Vou coletar os da
 
 ## PASSO 2: Completar dados automaticamente
 
-Execute em paralelo **sem pedir permissão**:
+Execute em paralelo **sem pedir permissão** (período = `generated_at` do rascunho até agora, para capturar trabalho do fim de semana e dias de gap):
 - `list_completed_tasks_by_date` (TickTick) — da data de geração do rascunho até agora
 - `gcal_list_events` — mesmo período
 - `gmail_search_messages` — mesmo período
+- **Claude Code transcripts** — `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt 'generated_at'` (substitua a data literalmente em formato `YYYY-MM-DD`). Por sessão, extraia: objetivo, resultado, PRs/issues referenciados. **Delegue a um subagente Explore.**
 
-Para os dois últimos, passe a resposta JSON via heredoc para o filtro (evita problemas de quoting):
+**Filtro obrigatório.** Após cada chamada MCP (`gcal_list_events`, `gmail_search_messages`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso. Bypass do filtro reintroduz os bugs que ele foi criado para evitar.
+
+Para os filtros, passe o JSON via heredoc:
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
@@ -66,8 +69,11 @@ Mescle o rascunho com os novos dados:
 - Ajuste o Sprint Planning se necessário
 
 **Ao adicionar Outputs/Outcomes**, siga as mesmas regras do `/sprint-start`:
+- **Output language is English.** Outcomes, Outputs, narrativas e tabelas em inglês — traduzir qualquer dado-fonte em português.
 - **Outcome** = o estado do mundo mudou (aprovação recebida, decisão final, conta encerrada). Submeter / enviar / abrir / publicar é **Output**, não Outcome.
 - **Outputs** começam com substantivo, não com verbo. ✗ "Sent resume to Google" → ✓ "Google resume". ✗ "Published 4 editions" → ✓ "4 editions".
+- **Exclusions** (never list): stats/analytics summaries from third parties; incoming emails/replies; calendar events the user did not accept.
+- **Timestamp scope** (differs from `/sprint-start`): include work from `generated_at` through today — gap-day work is exactly what `/sprint-close` exists to capture. Do not cap at `current.end`.
 
 Entregue o documento final limpo (sem `[PENDING]`, sem comentários), **no mesmo formato markdown do rascunho** (headers `#`/`##`/`###`, bullets `*`, tabelas com `:----`, listas numeradas para prioridades e outputs) — pronto para copy/paste direto no Google Docs.
 
@@ -97,3 +103,15 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts archive-wip --repo <<REPO_PATH>> --d
 O comando cria `.sprints/archive/<DATA>.md` (sobrescreve em reruns do mesmo ciclo — intencional).
 
 O arquivo arquivado é a **fonte de contexto** que `/sprint-start` (PASSO 1b) lê na próxima sexta para preservar "On my mind", "On hold" e metas de Health entre sprints. Não apague — sobrescrever o `sprint-wip.md` antes do próximo `/sprint-start` é seguro porque o contexto vive no arquivo arquivado.
+
+3. **Upload automático para o Google Doc:**
+
+```bash
+node <<REPO_PATH>>/upload-sprint.js
+```
+
+Em caso de erro:
+- `invalid_grant` → token expirado. Instrua o usuário: `rm token.json && node upload-sprint.js` para reautenticar no browser.
+- `APPS_SCRIPT_ID not set` → configuração inicial incompleta. Redirecionar para SETUP.md.
+
+O upload é recuperável — os arquivos locais já estão salvos e arquivados. Não falhe o sprint-close inteiro por causa de um erro de upload.
