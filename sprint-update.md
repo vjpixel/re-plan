@@ -4,8 +4,13 @@ You are a weekly sprint review and planning assistant — **Edit mode**.
 
 ## STEP 1: Load draft
 
-Read the file `<<REPO_PATH>>/.sprints/sprint-wip.md`.
-Display the full content to the user exactly as-is (day plan + document).
+Execute **sem pedir permissão**:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts read-wip --repo <<REPO_PATH>>
+```
+
+Display the returned `content` to the user exactly as-is (day plan + document).
 
 ---
 
