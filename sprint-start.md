@@ -22,26 +22,23 @@ Se hoje não for sexta-feira, confirme com o usuário antes de prosseguir — o 
 
 ## PASSO 1b: Contexto do sprint anterior
 
-Antes de coletar dados, identifique o arquivo mais recente em `<<REPO_PATH>>/.sprints/archive/` (nomes em formato `YYYY-MM-DD.md`, escolha a data mais recente) e leia-o. Esse arquivo é o snapshot imutável do último sprint fechado e é a fonte canônica de contexto entre sprints.
+Execute **sem pedir permissão**:
 
-Extraia, do Sprint Planning anterior:
-- Itens em **On my mind**
-- Itens em **On hold**
-- Metas de **Health** (Meditate, Exercise, Sleep Score)
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts archive --repo <<REPO_PATH>>
+```
 
-Aplique essas informações no PASSO 4c. Itens "On my mind" e "On hold" só são removidos quando há sinal **explícito** nos dados coletados no PASSO 2 — nunca por inferência genérica:
+O JSON retornado contém:
+- `on_my_mind[]` — itens do sprint anterior (null se não houver histórico)
+- `on_hold[]` — itens em espera
+- `health_goals{}` — metas de Health anteriores (ex.: `{"Meditate":"7 days","Sleep Score":"82"}`)
+- `path` — caminho do arquivo de referência (null = primeiro uso, prosseguir sem contexto)
 
-- Remover de **On my mind** se:
-  - Tarefa correspondente foi concluída em TickTick no período do sprint, OU
-  - Email de aprovação/decisão/resposta chegou em Gmail (ex.: recrutador respondeu, parceiro confirmou)
-- Mover de **On hold** para **Projects Priority** se:
-  - O bloqueador (pessoa/decisão externa) respondeu por email/calendário, OU
-  - Tarefas associadas ao projeto foram reativadas em TickTick (saíram do estado "aguardando")
-- Caso contrário, preservar o item exatamente como está no arquivo arquivado.
+Aplique `on_my_mind`, `on_hold` e `health_goals` no PASSO 4c. Itens só são removidos se houver sinal **explícito** nos dados do PASSO 2 — nunca por inferência genérica:
 
-Metas de Health do sprint anterior servem como baseline para propor as próximas metas (ex.: se Sleep Score foi 70 com meta 85, propor algo como 77 — ajuste incremental, não otimista).
-
-Se o diretório `archive/` não existir ou estiver vazio (primeiro uso), tente o fallback legacy `<<REPO_PATH>>/.sprints/sprint-final.md` (formato antigo, sprint anterior). Se nem isso existir, prossiga sem contexto anterior.
+- Remover de **On my mind** se: tarefa concluída em TickTick OU email de decisão/aprovação em Gmail.
+- Mover de **On hold** para **Projects Priority** se: bloqueador respondeu por email/calendário OU tarefas reativadas em TickTick.
+- Caso contrário, preservar exatamente como veio no JSON.
 
 ---
 
@@ -56,9 +53,9 @@ Execute em paralelo **sem pedir permissão**:
 **Lote B** (com IDs em mãos):
 - `list_completed_tasks_by_date` (TickTick) — início do sprint até agora
 - `list_undone_tasks_by_date` (TickTick) — tarefas abertas
-- `gcal_list_events` — eventos do sprint até hoje (skip events where myResponseStatus is not "accepted")
-- `gmail_search_messages` — emails do período: recrutadores, aprovações, marcos, entregas (exclude Amazon orders/shipments)
-- `gh api "/users/vjpixel/events?per_page=50"` (GitHub) — commits, PRs, issue comments in sprint period
+- `gcal_list_events` — eventos do sprint até hoje; após receber, filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal` (remove não-aceitos)
+- `gmail_search_messages` — emails do período; após receber, filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gmail` (remove Amazon orders/shipments)
+- `gh api "/users/vjpixel/events?per_page=50"` (GitHub); filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-github --start START --end END` (janela do sprint)
 
 ---
 
@@ -272,12 +269,11 @@ Aguarde confirmação antes de continuar.
 
 ## PASSO 5: Salvar rascunho
 
-Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo:
-`<<REPO_PATH>>/.sprints/sprint-wip.md`
+Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo `<<REPO_PATH>>/.sprints/sprint-wip.md`.
 
-Inclua no topo do arquivo:
+Inclua obrigatoriamente na primeira linha:
 ```
-<!-- sprint-wip: [período] | gerado em: [data e hora] -->
+<!-- sprint-wip: [período em formato legível, ex: 27/Abr–3/Mai] | gerado em: [data e hora locais] -->
 ```
 
 ---
