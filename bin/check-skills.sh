@@ -48,4 +48,15 @@ if grep -l '<<REPO_PATH>>' "$dest"/*.md 2>/dev/null; then
   exit 1
 fi
 
+# ----------------------------------------------------------------------------
+# Check 3: date math must not be re-embedded in skill prose.
+# These phrases signal logic that belongs in bin/sprint.ts, not in markdown.
+# ----------------------------------------------------------------------------
+DATE_MATH_RE='(calcule dias úteis|última segunda|subtraia feriados|Feriados nacionais brasileiros a considerar)'
+
+if grep -nEi "$DATE_MATH_RE" "${skills[@]}" 2>/dev/null; then
+  echo "::error::Skill files contain date-math prose that should live in bin/sprint.ts instead." >&2
+  exit 1
+fi
+
 echo "Skill checks passed."
