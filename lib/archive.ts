@@ -49,7 +49,8 @@ export function parsePriorPlanning(content: string): Pick<ArchiveContext, 'on_my
 
     if (/^\|\s*Health\s*\|\s*Goal\s*\|/i.test(line)) { inHealthTable = true; continue; }
     if (inHealthTable) {
-      if (line.startsWith('|') && !/:[-]+:?/.test(line)) {
+      const isSeparator = /^\|[\s:|-]+\|$/.test(line) && /-/.test(line);
+      if (line.startsWith('|') && !isSeparator) {
         const cells = line.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(Boolean);
         if (cells.length >= 2 && cells[0]) health_goals[cells[0]] = cells[1];
       } else if (!line.startsWith('|')) {

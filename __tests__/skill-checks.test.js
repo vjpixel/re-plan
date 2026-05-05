@@ -68,6 +68,19 @@ test('catches date-math prose: "Feriados nacionais brasileiros a considerar"', (
   assert.equal(r.status, 1, 'expected exit 1 on holiday list prose');
 });
 
+test('catches MCP filter prose: "skip events where myResponseStatus"', () => {
+  const dir = writeFixture('Skip events where myResponseStatus is not "accepted".\n');
+  const r = runCheck(dir);
+  assert.equal(r.status, 1, 'expected exit 1 on filter prose');
+  assert.match(r.stderr, /MCP filter prose/);
+});
+
+test('catches MCP filter prose: "exclude Amazon orders"', () => {
+  const dir = writeFixture('- gmail_search_messages — exclude Amazon orders/shipments\n');
+  const r = runCheck(dir);
+  assert.equal(r.status, 1, 'expected exit 1 on Amazon filter prose');
+});
+
 test('does not flag the sprint.ts CLI invocation line', () => {
   const dir = writeFixture('Run `node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts period --today YYYY-MM-DD`.\n');
   const r = runCheck(dir);

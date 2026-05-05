@@ -34,6 +34,16 @@ test('readWip: parses period and generated_at from header', () => {
   assert.ok(result.content.includes('Sprint Review'));
 });
 
+test('readWip: parses ISO-style date in generated_at (regression: dashes)', () => {
+  const repo = makeTmpRepo();
+  const wip = `<!-- sprint-wip: 27-Apr–3-May | gerado em: 2026-05-02 18:30 -->\n# header\n`;
+  fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), wip);
+  const result = readWip(repo);
+  assert.ok(result);
+  assert.equal(result.period, '27-Apr–3-May');
+  assert.equal(result.generated_at, '2026-05-02 18:30');
+});
+
 test('readWip: returns empty strings for missing header fields', () => {
   const repo = makeTmpRepo();
   fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), '# No header here\n');

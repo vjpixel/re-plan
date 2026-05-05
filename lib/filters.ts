@@ -3,9 +3,9 @@ const AMAZON_PATTERNS = [
   /noreply.*amazon/i,
   /shipment.tracking/i,
   /tracking.*number/i,
-  /your (amazon )?order/i,
-  /sua encomenda/i,
-  /entrega agendada/i,
+  /your amazon order/i,
+  /sua encomenda da amazon/i,
+  /amazon[- ]entrega/i,
 ];
 
 function isAmazon(from = '', subject = ''): boolean {

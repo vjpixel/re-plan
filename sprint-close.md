@@ -19,8 +19,18 @@ Informe ao usuário: "Encontrei o rascunho do sprint [period]. Vou coletar os da
 
 Execute em paralelo **sem pedir permissão**:
 - `list_completed_tasks_by_date` (TickTick) — da data de geração do rascunho até agora
-- `gcal_list_events` — mesmo período; filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal`
-- `gmail_search_messages` — mesmo período; filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gmail`
+- `gcal_list_events` — mesmo período
+- `gmail_search_messages` — mesmo período
+
+Para os dois últimos, passe a resposta JSON via heredoc para o filtro (evita problemas de quoting):
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
+{aqui-cola-o-JSON-do-MCP}
+JSON
+```
+
+Use `filter-gmail` da mesma forma. Cada comando lê do stdin e retorna o array filtrado em stdout.
 
 ---
 

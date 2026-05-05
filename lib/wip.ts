@@ -13,7 +13,7 @@ function wipPath(repoPath: string): string {
 }
 
 function parseWipHeader(content: string): { period: string; generated_at: string } {
-  const m = content.match(/<!--\s*sprint-wip:\s*([^|]+)\|\s*gerado em:\s*([^-\n]+?)\s*-->/);
+  const m = content.match(/<!--\s*sprint-wip:\s*([^|]+?)\s*\|\s*gerado em:\s*(.+?)\s*-->/);
   return { period: m ? m[1].trim() : '', generated_at: m ? m[2].trim() : '' };
 }
 

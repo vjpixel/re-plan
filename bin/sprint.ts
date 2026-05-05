@@ -36,6 +36,29 @@ async function readStdin(): Promise<string> {
   });
 }
 
+function parseStdinArray(raw: string): Record<string, unknown>[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    process.stderr.write(`Invalid JSON on stdin: ${(e as Error).message}\n`);
+    process.exit(1);
+  }
+  if (!Array.isArray(parsed)) {
+    process.stderr.write('Stdin JSON must be an array\n');
+    process.exit(1);
+  }
+  return parsed as Record<string, unknown>[];
+}
+
+function requireISODate(name: string, value: string | undefined): string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    process.stderr.write(`${name} requires YYYY-MM-DD\n`);
+    process.exit(1);
+  }
+  return value;
+}
+
 async function main(): Promise<void> {
   switch (subcommand) {
     case 'period': {
@@ -67,30 +90,25 @@ async function main(): Promise<void> {
     }
 
     case 'archive-wip': {
-      const date = flag(args, '--date');
-      if (!date) { process.stderr.write('--date YYYY-MM-DD required\n'); process.exit(1); }
+      const date = requireISODate('--date', flag(args, '--date'));
       out({ archived_to: archiveWip(repoPath(), date) });
       break;
     }
 
     case 'filter-gcal': {
-      const raw = await readStdin();
-      out(filterAcceptedCalendarEvents(JSON.parse(raw)));
+      out(filterAcceptedCalendarEvents(parseStdinArray(await readStdin())));
       break;
     }
 
     case 'filter-gmail': {
-      const raw = await readStdin();
-      out(filterRelevantEmails(JSON.parse(raw)));
+      out(filterRelevantEmails(parseStdinArray(await readStdin())));
       break;
     }
 
     case 'filter-github': {
-      const start = flag(args, '--start');
-      const end = flag(args, '--end');
-      if (!start || !end) { process.stderr.write('--start and --end YYYY-MM-DD required\n'); process.exit(1); }
-      const raw = await readStdin();
-      out(windowGithubEvents(JSON.parse(raw), start, end));
+      const start = requireISODate('--start', flag(args, '--start'));
+      const end = requireISODate('--end', flag(args, '--end'));
+      out(windowGithubEvents(parseStdinArray(await readStdin()), start, end));
       break;
     }
 

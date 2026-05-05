@@ -59,4 +59,15 @@ if grep -nEi "$DATE_MATH_RE" "${skills[@]}" 2>/dev/null; then
   exit 1
 fi
 
+# ----------------------------------------------------------------------------
+# Check 4: MCP-result filter logic must not be re-embedded in skill prose.
+# These phrases signal filters that belong in lib/filters.ts.
+# ----------------------------------------------------------------------------
+FILTER_RE='(skip events where myResponseStatus|exclude Amazon orders|exclude Amazon shipments)'
+
+if grep -nEi "$FILTER_RE" "${skills[@]}" 2>/dev/null; then
+  echo "::error::Skill files contain MCP filter prose that should live in lib/filters.ts instead." >&2
+  exit 1
+fi
+
 echo "Skill checks passed."

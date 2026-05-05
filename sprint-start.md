@@ -28,11 +28,12 @@ Execute **sem pedir permissão**:
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts archive --repo <<REPO_PATH>>
 ```
 
-O JSON retornado contém:
-- `on_my_mind[]` — itens do sprint anterior (null se não houver histórico)
+O retorno é `null` no primeiro uso (sem `.sprints/archive/` ou `sprint-final.md`); nesse caso, prossiga sem contexto anterior. Caso contrário, o JSON contém:
+- `path` — caminho do arquivo de referência
+- `date` — data do sprint arquivado (YYYY-MM-DD)
+- `on_my_mind[]` — itens do sprint anterior
 - `on_hold[]` — itens em espera
 - `health_goals{}` — metas de Health anteriores (ex.: `{"Meditate":"7 days","Sleep Score":"82"}`)
-- `path` — caminho do arquivo de referência (null = primeiro uso, prosseguir sem contexto)
 
 Aplique `on_my_mind`, `on_hold` e `health_goals` no PASSO 4c. Itens só são removidos se houver sinal **explícito** nos dados do PASSO 2 — nunca por inferência genérica:
 
@@ -53,9 +54,19 @@ Execute em paralelo **sem pedir permissão**:
 **Lote B** (com IDs em mãos):
 - `list_completed_tasks_by_date` (TickTick) — início do sprint até agora
 - `list_undone_tasks_by_date` (TickTick) — tarefas abertas
-- `gcal_list_events` — eventos do sprint até hoje; após receber, filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal` (remove não-aceitos)
-- `gmail_search_messages` — emails do período; após receber, filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gmail` (remove Amazon orders/shipments)
-- `gh api "/users/vjpixel/events?per_page=50"` (GitHub); filtre: `echo 'JSON' | node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-github --start START --end END` (janela do sprint)
+- `gcal_list_events` — eventos do sprint até hoje; depois filtre conforme abaixo
+- `gmail_search_messages` — emails do período; depois filtre conforme abaixo
+- `gh api "/users/vjpixel/events?per_page=50"` (GitHub); depois filtre conforme abaixo
+
+Para cada um dos três acima, passe a resposta JSON via heredoc (evita problemas de quoting com aspas, backticks, `$`, etc.):
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
+{aqui-cola-o-JSON-do-MCP}
+JSON
+```
+
+Use `filter-gmail` (sem flags) e `filter-github --start YYYY-MM-DD --end YYYY-MM-DD` para os outros dois. Cada comando lê do stdin e retorna o array filtrado em stdout.
 
 ---
 

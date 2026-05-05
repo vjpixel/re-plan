@@ -51,6 +51,16 @@ test('filterRelevantEmails: drops Amazon by subject', () => {
   assert.equal(result[0].from, 'recruiter@google.com');
 });
 
+test('filterRelevantEmails: keeps non-Amazon order emails (regression)', () => {
+  // "your order" alone must not match — only Amazon-specific phrasing.
+  const msgs = [
+    { from: 'orders@mercadolivre.com', subject: 'Your order has been shipped' },
+    { from: 'noreply@magalu.com.br', subject: 'Sua encomenda saiu para entrega' },
+  ];
+  const result = filterRelevantEmails(msgs);
+  assert.equal(result.length, 2);
+});
+
 test('filterRelevantEmails: keeps non-Amazon emails', () => {
   const msgs = [
     { from: 'ceo@startup.com', subject: 'Partnership proposal' },
