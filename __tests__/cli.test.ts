@@ -1,0 +1,199 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { spawnSync, SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
+
+const REPO_ROOT = path.resolve(__dirname, '..');
+const SPRINT_BIN = path.join(REPO_ROOT, 'bin', 'sprint.ts');
+
+interface RunResult { status: number | null; stdout: string; stderr: string }
+
+function run(args: string[], opts: { input?: string; cwd?: string } = {}): RunResult {
+  const spawnOpts: SpawnSyncOptionsWithStringEncoding = {
+    encoding: 'utf8',
+    cwd: opts.cwd ?? REPO_ROOT,
+    input: opts.input,
+  };
+  const r = spawnSync('node', ['-r', 'tsx/cjs', SPRINT_BIN, ...args], spawnOpts);
+  return { status: r.status, stdout: r.stdout, stderr: r.stderr };
+}
+
+function tmpRepo(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-e2e-'));
+  fs.mkdirSync(path.join(dir, '.sprints', 'archive'), { recursive: true });
+  return dir;
+}
+
+// ──────────────────────────── period ────────────────────────────
+
+test('cli: period --today returns current+next JSON to stdout', () => {
+  const r = run(['period', '--today', '2026-05-04']);
+  assert.equal(r.status, 0, r.stderr);
+  const json = JSON.parse(r.stdout);
+  assert.equal(json.current.start, '2026-04-27');
+  assert.equal(json.current.end, '2026-05-04');
+  assert.equal(json.next.start, '2026-05-11');
+});
+
+test('cli: period rejects bad date format', () => {
+  const r = run(['period', '--today', 'not-a-date']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Invalid date format/);
+});
+
+// ──────────────────────────── archive ───────────────────────────
+
+test('cli: archive returns null when no archive or legacy file', () => {
+  const repo = tmpRepo();
+  const r = run(['archive', '--repo', repo]);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(JSON.parse(r.stdout), null);
+});
+
+test('cli: archive returns parsed sections from latest archive', () => {
+  const repo = tmpRepo();
+  const archive = `## On my mind\nVerificar Google\nResponder João\n## On hold\nProjeto X — bloqueio\n### Next week's goals\n| Health | Goal |\n| :---- | :---- |\n| Meditate | **7 days** |\n`;
+  fs.writeFileSync(path.join(repo, '.sprints', 'archive', '2026-04-27.md'), archive);
+  const r = run(['archive', '--repo', repo]);
+  assert.equal(r.status, 0, r.stderr);
+  const json = JSON.parse(r.stdout);
+  assert.equal(json.date, '2026-04-27');
+  assert.deepEqual(json.on_my_mind, ['Verificar Google', 'Responder João']);
+  assert.deepEqual(json.on_hold, ['Projeto X — bloqueio']);
+  assert.equal(json.health_goals['Meditate'], '7 days');
+});
+
+// ──────────────────────────── read-wip + archive-wip ─────────────
+
+test('cli: read-wip exits 1 when sprint-wip.md is absent', () => {
+  const repo = tmpRepo();
+  const r = run(['read-wip', '--repo', repo]);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /sprint-wip\.md not found/);
+});
+
+test('cli: read-wip parses period and generated_at from header', () => {
+  const repo = tmpRepo();
+  const wip = `<!-- sprint-wip: 27/Abr–3/Mai | gerado em: 02/05/2026, 18:30 -->\nbody here\n`;
+  fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), wip);
+  const r = run(['read-wip', '--repo', repo]);
+  assert.equal(r.status, 0, r.stderr);
+  const json = JSON.parse(r.stdout);
+  assert.equal(json.period, '27/Abr–3/Mai');
+  assert.equal(json.generated_at, '02/05/2026, 18:30');
+  assert.match(json.content, /body here/);
+});
+
+test('cli: archive-wip copies wip to archive/<date>.md', () => {
+  const repo = tmpRepo();
+  fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), 'final content\n');
+  const r = run(['archive-wip', '--repo', repo, '--date', '2026-05-03']);
+  assert.equal(r.status, 0, r.stderr);
+  const archived = path.join(repo, '.sprints', 'archive', '2026-05-03.md');
+  assert.ok(fs.existsSync(archived));
+  assert.equal(fs.readFileSync(archived, 'utf8'), 'final content\n');
+});
+
+test('cli: archive-wip rejects bad date format', () => {
+  const repo = tmpRepo();
+  fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), 'x\n');
+  const r = run(['archive-wip', '--repo', repo, '--date', '3-Mai']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /YYYY-MM-DD/);
+});
+
+// ──────────────────────────── filters via stdin ─────────────────
+
+test('cli: filter-gcal drops non-accepted events from stdin JSON', () => {
+  const events = [
+    { id: 'a', myResponseStatus: 'accepted', summary: 'Standup' },
+    { id: 'b', myResponseStatus: 'declined', summary: 'Skip me' },
+    { id: 'c', myResponseStatus: 'accepted', summary: 'Planning' },
+  ];
+  const r = run(['filter-gcal'], { input: JSON.stringify(events) });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.length, 2);
+  assert.deepEqual(out.map((e: { id: string }) => e.id), ['a', 'c']);
+});
+
+test('cli: filter-gmail drops Amazon emails by sender', () => {
+  const msgs = [
+    { from: 'noreply@amazon.com.br', subject: 'Pedido enviado' },
+    { from: 'recruiter@google.com', subject: 'Engineer role' },
+  ];
+  const r = run(['filter-gmail'], { input: JSON.stringify(msgs) });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].from, 'recruiter@google.com');
+});
+
+test('cli: filter-github windows events to date range', () => {
+  const events = [
+    { id: 1, created_at: '2026-04-26T10:00:00Z' }, // before
+    { id: 2, created_at: '2026-04-30T15:30:00Z' }, // in
+    { id: 3, created_at: '2026-05-04T08:00:00Z' }, // after
+  ];
+  const r = run(['filter-github', '--start', '2026-04-27', '--end', '2026-05-03'], {
+    input: JSON.stringify(events),
+  });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].id, 2);
+});
+
+test('cli: filter-gcal rejects non-array stdin with clear error', () => {
+  const r = run(['filter-gcal'], { input: '{"not":"array"}' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Stdin JSON must be an array/);
+});
+
+test('cli: filter-gcal rejects malformed JSON on stdin', () => {
+  const r = run(['filter-gcal'], { input: 'not json at all' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Invalid JSON on stdin/);
+});
+
+// ──────────────────────────── dispatcher ────────────────────────
+
+test('cli: unknown subcommand exits 1 with error', () => {
+  const r = run(['nonexistent-subcommand']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Unknown subcommand/);
+});
+
+test('cli: missing subcommand exits 1', () => {
+  const r = run([]);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Unknown subcommand/);
+});
+
+// ──────────────────── workflow integration ──────────────────────
+
+test('cli: full sprint-close-style flow (read-wip → archive-wip)', () => {
+  const repo = tmpRepo();
+  const wip = `<!-- sprint-wip: 27/Abr–3/Mai | gerado em: 02/05/2026, 18:30 -->\nfinal report\n`;
+  fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), wip);
+
+  // Step 1: read the WIP
+  const read = run(['read-wip', '--repo', repo]);
+  assert.equal(read.status, 0, read.stderr);
+  const meta = JSON.parse(read.stdout);
+  assert.equal(meta.period, '27/Abr–3/Mai');
+
+  // Step 2: archive it under the period's end date
+  const archived = run(['archive-wip', '--repo', repo, '--date', '2026-05-03']);
+  assert.equal(archived.status, 0, archived.stderr);
+  const archivedJson = JSON.parse(archived.stdout);
+  assert.match(archivedJson.archived_to, /2026-05-03\.md$/);
+
+  // Step 3: next sprint-start can now load this archive
+  const archive = run(['archive', '--repo', repo]);
+  assert.equal(archive.status, 0, archive.stderr);
+  const archiveJson = JSON.parse(archive.stdout);
+  assert.equal(archiveJson.date, '2026-05-03');
+});
