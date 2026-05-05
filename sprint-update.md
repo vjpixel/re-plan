@@ -25,6 +25,8 @@ Apply all changes in one pass.
 
 ## STEP 3: Save
 
+Apply edits in **English** — translate any Portuguese input from the user into English before integrating into the document.
+
 Overwrite `<<REPO_PATH>>/.sprints/sprint-wip.md` with the updated content, preserving the `<!-- sprint-wip: ... -->` header.
 
 Confirm: "Done. Draft updated."
