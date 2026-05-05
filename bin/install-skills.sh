@@ -28,6 +28,11 @@ esac
 DEST="${1:-${HOME}/.claude/commands}"
 mkdir -p "$DEST"
 
+# Warn if tsx is not installed — skill prose invokes it at runtime.
+if [ ! -f "$REPO_DIR/node_modules/.bin/tsx" ] && [ ! -f "$REPO_DIR/node_modules/tsx/dist/cli.mjs" ]; then
+  echo "warning: tsx not found in node_modules. Run 'npm install' before using the skills." >&2
+fi
+
 for f in sprint-start.md sprint-update.md sprint-close.md; do
   src="${REPO_DIR}/${f}"
   if [ ! -f "$src" ]; then

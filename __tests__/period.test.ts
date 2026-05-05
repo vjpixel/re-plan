@@ -90,6 +90,9 @@ test('nextPeriod: holiday within next period reduces available days, extends end
 test('nextPeriod: after Monday → next Monday is 7 days later', () => {
   const result = nextPeriod(d('2026-05-04'), 5); // Monday
   assert.equal(result.start, '2026-05-11');
+  assert.equal(result.end, '2026-05-15');
+  assert.equal(result.workdays, 5);
+  assert.deepEqual(result.holidays, []);
 });
 
 // formatPeriodHeader

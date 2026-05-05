@@ -55,6 +55,25 @@ test('does not flag the documented <<REPO_PATH>> placeholder', () => {
   assert.equal(r.status, 0, `placeholder usage must pass; stderr=${r.stderr}`);
 });
 
+test('catches date-math prose: "calcule dias úteis"', () => {
+  const dir = writeFixture('- Calcule dias úteis do sprint.\n');
+  const r = runCheck(dir);
+  assert.equal(r.status, 1, 'expected exit 1 on date-math prose');
+  assert.match(r.stderr, /date-math prose/);
+});
+
+test('catches date-math prose: "Feriados nacionais brasileiros a considerar"', () => {
+  const dir = writeFixture('**Feriados nacionais brasileiros a considerar:**\n- 1/Jan\n');
+  const r = runCheck(dir);
+  assert.equal(r.status, 1, 'expected exit 1 on holiday list prose');
+});
+
+test('does not flag the sprint.ts CLI invocation line', () => {
+  const dir = writeFixture('Run `node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts period --today YYYY-MM-DD`.\n');
+  const r = runCheck(dir);
+  assert.equal(r.status, 0, `CLI invocation line must pass; stderr=${r.stderr}`);
+});
+
 test('install-skills materialization leaves no <<REPO_PATH>> tokens', () => {
   // The "clean install" check is part of check-skills.sh's positive run,
   // but assert it standalone to surface the failure mode clearly.

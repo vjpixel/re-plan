@@ -9,6 +9,10 @@ function flag(args: string[], name: string): string | undefined {
 }
 
 function parseLocalDate(iso: string): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    process.stderr.write(`Invalid date format: "${iso}" — expected YYYY-MM-DD\n`);
+    process.exit(1);
+  }
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
