@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { createRequire } from 'node:module';
 import { spawnSync, SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const SPRINT_BIN = path.join(REPO_ROOT, 'bin', 'sprint.ts');
+// Resolve tsx/cjs absolutely so spawning with cwd=<tmpdir> still finds the loader.
+const TSX_CJS = createRequire(path.join(REPO_ROOT, 'package.json')).resolve('tsx/cjs');
 
 interface RunResult { status: number | null; stdout: string; stderr: string }
 
@@ -15,8 +18,9 @@ function run(args: string[], opts: { input?: string; cwd?: string } = {}): RunRe
     encoding: 'utf8',
     cwd: opts.cwd ?? REPO_ROOT,
     input: opts.input,
+    timeout: 10_000,
   };
-  const r = spawnSync('node', ['-r', 'tsx/cjs', SPRINT_BIN, ...args], spawnOpts);
+  const r = spawnSync('node', ['-r', TSX_CJS, SPRINT_BIN, ...args], spawnOpts);
   return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
 
@@ -48,6 +52,13 @@ test('cli: period rejects bad date format', () => {
 test('cli: archive returns null when no archive or legacy file', () => {
   const repo = tmpRepo();
   const r = run(['archive', '--repo', repo]);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(JSON.parse(r.stdout), null);
+});
+
+test('cli: archive defaults --repo to cwd when flag is omitted', () => {
+  const repo = tmpRepo();
+  const r = run(['archive'], { cwd: repo });
   assert.equal(r.status, 0, r.stderr);
   assert.equal(JSON.parse(r.stdout), null);
 });
@@ -146,6 +157,18 @@ test('cli: filter-github windows events to date range', () => {
   assert.equal(out[0].id, 2);
 });
 
+test('cli: filter-github rejects missing --start flag', () => {
+  const r = run(['filter-github', '--end', '2026-05-03'], { input: '[]' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /--start requires YYYY-MM-DD/);
+});
+
+test('cli: filter-github rejects missing --end flag', () => {
+  const r = run(['filter-github', '--start', '2026-04-27'], { input: '[]' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /--end requires YYYY-MM-DD/);
+});
+
 test('cli: filter-gcal rejects non-array stdin with clear error', () => {
   const r = run(['filter-gcal'], { input: '{"not":"array"}' });
   assert.equal(r.status, 1);
@@ -174,26 +197,48 @@ test('cli: missing subcommand exits 1', () => {
 
 // ──────────────────── workflow integration ──────────────────────
 
-test('cli: full sprint-close-style flow (read-wip → archive-wip)', () => {
+test('cli: full sprint-close-style flow (read-wip → archive-wip → archive)', () => {
   const repo = tmpRepo();
-  const wip = `<!-- sprint-wip: 27/Abr–3/Mai | gerado em: 02/05/2026, 18:30 -->\nfinal report\n`;
+  const wip = `<!-- sprint-wip: 27/Abr–3/Mai | gerado em: 02/05/2026, 18:30 -->
+# 3/Mai
+
+## Sprint Planning *(4/Mai–8/Mai, 5 workdays)*
+
+## On my mind
+
+Item carried forward A
+Item carried forward B
+
+## On hold
+
+External dependency — waiting on review
+
+### Next week's goals
+
+| Health | Goal |
+| :---- | :---- |
+| Meditate | **7 days** |
+| Sleep Score | **85** |
+`;
   fs.writeFileSync(path.join(repo, '.sprints', 'sprint-wip.md'), wip);
 
   // Step 1: read the WIP
   const read = run(['read-wip', '--repo', repo]);
   assert.equal(read.status, 0, read.stderr);
-  const meta = JSON.parse(read.stdout);
-  assert.equal(meta.period, '27/Abr–3/Mai');
+  assert.equal(JSON.parse(read.stdout).period, '27/Abr–3/Mai');
 
-  // Step 2: archive it under the period's end date
+  // Step 2: archive under the period's end date
   const archived = run(['archive-wip', '--repo', repo, '--date', '2026-05-03']);
   assert.equal(archived.status, 0, archived.stderr);
-  const archivedJson = JSON.parse(archived.stdout);
-  assert.match(archivedJson.archived_to, /2026-05-03\.md$/);
+  assert.match(JSON.parse(archived.stdout).archived_to, /2026-05-03\.md$/);
 
-  // Step 3: next sprint-start can now load this archive
+  // Step 3: next sprint-start loads the archive and recovers context
   const archive = run(['archive', '--repo', repo]);
   assert.equal(archive.status, 0, archive.stderr);
   const archiveJson = JSON.parse(archive.stdout);
   assert.equal(archiveJson.date, '2026-05-03');
+  assert.deepEqual(archiveJson.on_my_mind, ['Item carried forward A', 'Item carried forward B']);
+  assert.deepEqual(archiveJson.on_hold, ['External dependency — waiting on review']);
+  assert.equal(archiveJson.health_goals['Meditate'], '7 days');
+  assert.equal(archiveJson.health_goals['Sleep Score'], '85');
 });
