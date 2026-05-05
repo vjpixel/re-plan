@@ -16,8 +16,6 @@ O JSON retornado contém dois objetos:
 
 Use `current.*` no header do Sprint Review (PASSO 4a) e `next.*` no header do Sprint Planning (PASSO 4c). O header do Review aparece para o usuário validar — se o período estiver errado, ele corrige durante a revisão.
 
-Se hoje não for sexta-feira, confirme com o usuário antes de prosseguir — o próximo sprint usa a mesma duração e propaga o desvio.
-
 ---
 
 ## PASSO 1b: Contexto do sprint anterior
