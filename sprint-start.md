@@ -57,7 +57,7 @@ Execute em paralelo **sem pedir permissão**:
 - `gcal_list_events` — `current.start` até `current.end`; depois filtre conforme abaixo
 - `gmail_search_messages` — mesmo período; depois filtre conforme abaixo
 - `gh api "/users/vjpixel/events?per_page=50"` (GitHub); depois filtre conforme abaixo
-- **Claude Code transcripts** — `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt current.start ! -newermt current.end+1day`. Para cada arquivo top-level, extraia: primeira mensagem do usuário (objetivo da sessão), última mensagem do assistente (o que foi feito), PRs/issues referenciados. **Delegue a um subagente Explore** para não poluir o contexto principal.
+- **Claude Code transcripts** — calcule `dayAfterEnd` = dia seguinte a `current.end` em formato `YYYY-MM-DD` (ex.: `current.end=2026-05-03` → `dayAfterEnd=2026-05-04`), então rode (substituindo as duas datas literalmente): `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt 'current.start' ! -newermt 'dayAfterEnd'`. Para cada arquivo top-level, extraia: primeira mensagem do usuário (objetivo), última mensagem do assistente (resultado), PRs/issues referenciados. **Delegue a um subagente Explore** para não poluir o contexto principal.
 
 **Filtro obrigatório.** Após CADA chamada MCP (`gcal_list_events`, `gmail_search_messages`, `gh api events`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
 

@@ -21,7 +21,7 @@ Execute em paralelo **sem pedir permissão** (período = `generated_at` do rascu
 - `list_completed_tasks_by_date` (TickTick) — da data de geração do rascunho até agora
 - `gcal_list_events` — mesmo período
 - `gmail_search_messages` — mesmo período
-- **Claude Code transcripts** — `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt generated_at ! -newermt now`. Por sessão, extraia: objetivo, resultado, PRs/issues referenciados. **Delegue a um subagente Explore.**
+- **Claude Code transcripts** — `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt 'generated_at'` (substitua a data literalmente em formato `YYYY-MM-DD`). Por sessão, extraia: objetivo, resultado, PRs/issues referenciados. **Delegue a um subagente Explore.**
 
 **Filtro obrigatório.** Após cada chamada MCP (`gcal_list_events`, `gmail_search_messages`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso. Bypass do filtro reintroduz os bugs que ele foi criado para evitar.
 
@@ -68,9 +68,8 @@ Mescle o rascunho com os novos dados:
 - Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes
 - Ajuste o Sprint Planning se necessário
 
-**Output language is English.** All Outcomes, Outputs, narratives, and table entries must be in English. Translate any Portuguese source data.
-
 **Ao adicionar Outputs/Outcomes**, siga as mesmas regras do `/sprint-start`:
+- **Output language is English.** Outcomes, Outputs, narrativas e tabelas em inglês — traduzir qualquer dado-fonte em português.
 - **Outcome** = o estado do mundo mudou (aprovação recebida, decisão final, conta encerrada). Submeter / enviar / abrir / publicar é **Output**, não Outcome.
 - **Outputs** começam com substantivo, não com verbo. ✗ "Sent resume to Google" → ✓ "Google resume". ✗ "Published 4 editions" → ✓ "4 editions".
 - **Exclusions** (never list): stats/analytics summaries from third parties; incoming emails/replies; calendar events the user did not accept.
