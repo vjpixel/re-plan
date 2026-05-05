@@ -59,6 +59,10 @@ export function inferCurrentPeriod(today: Date): Period {
 
 export function nextPeriod(currentEnd: Date): Period {
   // Next sprint: the Mon–Sun week immediately following currentEnd.
+  // currentEnd must be a Sunday (the canonical output of inferCurrentPeriod).
+  if (currentEnd.getDay() !== 0) {
+    throw new Error(`nextPeriod expects a Sunday, got ${toISO(currentEnd)} (dow=${currentEnd.getDay()})`);
+  }
   const start = addDays(currentEnd, 1); // Monday
   const end = addDays(start, 6);        // Sunday
   const holidays = holidaysBetween(start, end);
