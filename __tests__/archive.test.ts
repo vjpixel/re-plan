@@ -42,6 +42,8 @@ Job Hunt — aguardando resposta da Google
 | Improvement |
 | :---- |
 | Work +2h |
+| Spend 1+ hours OoH |
+| Make impact |
 
 | Health | Goal |
 | :---- | :---- |
@@ -117,6 +119,16 @@ test('parsePriorPlanning: no health table returns empty object', () => {
   assert.deepEqual(r.health_goals, {});
 });
 
+test('parsePriorPlanning: extracts improvement_goals from single-column table', () => {
+  const r = parsePriorPlanning(SAMPLE_PLANNING);
+  assert.deepEqual(r.improvement_goals, ['Work +2h', 'Spend 1+ hours OoH', 'Make impact']);
+});
+
+test('parsePriorPlanning: no improvement table returns empty array', () => {
+  const r = parsePriorPlanning('## On my mind\nitem\n');
+  assert.deepEqual(r.improvement_goals, []);
+});
+
 // loadLatestArchive
 
 test('loadLatestArchive: returns null when no archive exists', () => {
@@ -132,4 +144,5 @@ test('loadLatestArchive: returns structured data for latest archive', () => {
   assert.equal(result.date, '2026-04-27');
   assert.deepEqual(result.on_my_mind, ['Verificar status do projeto X', 'Responder email do João']);
   assert.equal(result.health_goals['Sleep Score'], '82');
+  assert.deepEqual(result.improvement_goals, ['Work +2h', 'Spend 1+ hours OoH', 'Make impact']);
 });
