@@ -32,8 +32,9 @@ O retorno é `null` no primeiro uso (sem `.sprints/archive/` ou `sprint-final.md
 - `on_my_mind[]` — itens do sprint anterior
 - `on_hold[]` — itens em espera
 - `health_goals{}` — metas de Health anteriores (ex.: `{"Meditate":"7 days","Sleep Score":"82"}`)
+- `improvement_goals[]` — alvos de Improvement anteriores (ex.: `["Work +2h in important outputs", "Spend 1+ hours OoH", "Make impact"]`)
 
-Aplique `on_my_mind`, `on_hold` e `health_goals` no PASSO 4c. Itens só são removidos se houver sinal **explícito** nos dados do PASSO 2 — nunca por inferência genérica:
+Aplique `improvement_goals` e `health_goals` no PASSO 4b (avaliação do sprint que acabou) e `on_my_mind`, `on_hold`, `health_goals` no PASSO 4c (planejamento do próximo sprint). Itens só são removidos de `on_my_mind` / `on_hold` se houver sinal **explícito** nos dados do PASSO 2 — nunca por inferência genérica:
 
 - Remover de **On my mind** se: tarefa concluída em TickTick OU email de decisão/aprovação em Gmail.
 - Mover de **On hold** para **Projects Priority** se: bloqueador respondeu por email/calendário OU tarefas reativadas em TickTick.
@@ -189,18 +190,17 @@ Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. A
 
 | Improvement | Result |
 | :---- | :---: |
-| Work +2h in important outputs | **[PENDING] / X** |
-| Spend 1+ hours OoH | **[PENDING] / X** |
-| Make impact | **[PENDING] / X** |
+| [improvement_goals[0] do archive] | **[PENDING] / X** |
+| [improvement_goals[1] do archive] | **[PENDING] / X** |
+| [improvement_goals[2] do archive] | **[PENDING] / X** |
 
 ### Health goals
 
 | Health | Result |
 | :---- | :---: |
-| Meditate | **[PENDING] / 7** |
-| Exercise | **[PENDING] / X** |
-| Bedtime | **[PENDING] / [meta anterior]** |
-| Wake-up time | **[PENDING] / [meta anterior]** |
+| [chave 1 de health_goals] | **[PENDING] / [meta do archive]** |
+| [chave 2 de health_goals] | **[PENDING] / [meta do archive]** |
+| [chave 3 de health_goals] | **[PENDING] / [meta do archive]** |
 
 ### What did I do well?
 
@@ -215,6 +215,11 @@ Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. A
 * [1 bullet — compromisso concreto para o próximo sprint]
 ```
 
+- **Tabelas vêm do archive** (PASSO 1b):
+  - "Last week's improvement goals" → use as 3 linhas de `improvement_goals[]` exatamente como vieram. Não invente nem reuse labels fixos.
+  - "Health goals" → use as chaves de `health_goals{}` exatamente como vieram, com a meta no denominador (ex.: `{"Meditate":"7 days"}` → linha `| Meditate | **[PENDING] / 7 days** |`).
+  - Se o archive for `null` (primeiro uso) OU as listas vierem vazias, mantenha as 3 linhas placeholder com `[PENDING] / ?` e adicione nota: "(archive sem metas anteriores — preencher manualmente)".
+- Result column: marque com `[PENDING] / X` quando não conseguir derivar dos dados; o usuário preenche.
 - Rascunhar as 3 seções narrativas agora — não deixar como [PENDING]
 - Cada seção narrativa tem exatamente 1 bullet
 - "What did I do well?" foca em melhorias no sistema de trabalho
@@ -260,18 +265,19 @@ Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All gen
 
 | Improvement |
 | :---- |
-| Work +2h in important outputs |
-| Spend 1+ hours OoH |
-| Make impact |
+| [carregar de improvement_goals[] do archive — ou propor 3 novos se vazio] |
+| ... |
+| ... |
 
 | Health | Goal |
 | :---- | :---- |
-| Meditate | **7 days** |
-| Sleep Score | **[propor valor baseado no sprint anterior]** |
+| [chave 1 de health_goals] | **[meta do archive ou novo valor concreto]** |
+| [chave 2 de health_goals] | **[...]** |
 ```
 
 - Usar seção "Projects Priority" (não "Priority order")
-- Health goals: sempre propor números concretos — nunca deixar [PENDING]
+- **Improvements**: por default carregue `improvement_goals[]` do archive (mesmas labels da Retro do PASSO 4b — espelham o ciclo). Só sugira mudanças se o "What will I commit to improving?" da Retro propuser explicitamente uma nova meta — nesse caso, substitua a linha correspondente.
+- **Health goals**: por default carregue as mesmas chaves de `health_goals{}` do archive com as mesmas metas. Só ajuste se o Retrospective sinalizar que vale puxar a meta (ex.: Sleep Score atingido 3 sprints seguidos → propor +2). Sempre propor números concretos — nunca deixar [PENDING].
 - "On my mind" e "On hold": preservar os itens do sprint anterior se não houver indicação de mudança
 - Outcomes: propor um resultado concreto por projeto ativo — o que tornaria o sprint bem-sucedido para aquele projeto
 
