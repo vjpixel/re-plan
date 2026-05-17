@@ -129,6 +129,29 @@ test('parsePriorPlanning: no improvement table returns empty array', () => {
   assert.deepEqual(r.improvement_goals, []);
 });
 
+test('parsePriorPlanning: ignores Retro two-column "| Improvement | Result |" table', () => {
+  // Regression: a real archive has BOTH the Retrospective table (2 columns:
+  // Improvement | Result) AND the Planning table (1 column). The parser must
+  // pick the single-column Planning table, not the 2-column Retro one.
+  const content = `
+### Last week's improvement goals
+
+| Improvement | Result |
+| :---- | :---: |
+| Old goal A | **3 / 5** |
+| Old goal B | **1 / 5** |
+
+### Next week's goals
+
+| Improvement |
+| :---- |
+| New goal A |
+| New goal B |
+`;
+  const r = parsePriorPlanning(content);
+  assert.deepEqual(r.improvement_goals, ['New goal A', 'New goal B']);
+});
+
 // loadLatestArchive
 
 test('loadLatestArchive: returns null when no archive exists', () => {
