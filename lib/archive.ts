@@ -124,6 +124,13 @@ export const fmNumber = (v?: FrontmatterValue): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
+/** Canonicalize a goal value (≥/≤ symbols, single spaces) for cross-sprint comparison (#70). */
+export const normalizeGoalValue = (s: string): string =>
+  s.replace(/>=/g, '≥').replace(/<=/g, '≤').replace(/\s+/g, ' ').trim();
+
+export const normalizeGoalMap = (m: Record<string, string>): Record<string, string> =>
+  Object.fromEntries(Object.entries(m).map(([k, v]) => [k, normalizeGoalValue(v)]));
+
 /**
  * Parse leading YAML frontmatter into a generic object. Supports the subset the
  * sprint docs use: scalars, block/inline lists of scalars, and one level of
@@ -206,5 +213,5 @@ export function loadLatestArchive(repoPath: string): ArchiveContext | null {
   // Frontmatter is authoritative when present; prose parsing is the fallback
   // for archives written before the frontmatter schema (#61).
   const planning = parseFrontmatter(content) ?? parsePriorPlanning(content);
-  return { path: filePath, date, ...planning };
+  return { path: filePath, date, ...planning, health_goals: normalizeGoalMap(planning.health_goals) };
 }
