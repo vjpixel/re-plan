@@ -303,10 +303,37 @@ Aguarde confirmação antes de continuar.
 
 Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo `<<REPO_PATH>>/.sprints/sprint-wip.md`.
 
-Inclua obrigatoriamente na primeira linha:
+O arquivo **começa com um bloco de frontmatter YAML** (linha 1 = `---`) que espelha os campos do Planning — é o que o `bin/sprint.ts archive` lê no próximo ciclo (`lib/archive.ts`) e o que alimenta o dashboard Obsidian (`.sprints/Dashboard.md`). Logo abaixo dele, o comentário `sprint-wip` legível:
+
 ```
+---
+type: sprint
+review_period: [período do Review, ex: 1/Jun–7/Jun]
+review_workdays: [N]
+plan_period: [período do Planning, ex: 8/Jun–14/Jun]
+plan_workdays: [N]
+generated: [YYYY-MM-DD]
+projects:
+  - [Projeto 1]
+  - [Projeto 2]
+improvement_goals:
+  - [meta 1]
+  - [meta 2]
+  - [meta 3]
+health_goals:
+  [Chave 1]: [meta]
+  [Chave 2]: [meta]
+on_my_mind:
+  - [item]
+on_hold: []
+---
 <!-- sprint-wip: [período em formato legível, ex: 27/Abr–3/Mai] | gerado em: [data e hora locais] -->
 ```
+
+Regras do frontmatter:
+- `improvement_goals`, `health_goals`, `on_my_mind`, `on_hold` = exatamente os valores da seção **Planning** (PASSO 4c) — viram o "archive" lido pelo próximo sprint.
+- Liste vazios como `[]` (nunca omita a chave). Listas em bloco (`- item`); `health_goals` é um mapa aninhado (`Chave: meta`).
+- O bloco `---…---` precede tudo (requisito do Obsidian); o comentário `sprint-wip` e o corpo do doc vêm depois.
 
 ---
 
