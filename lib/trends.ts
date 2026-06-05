@@ -8,6 +8,7 @@ import {
   fmArray,
   fmMap,
   fmNumber,
+  normalizeGoalMap,
 } from './archive.js';
 
 export interface SprintRecord {
@@ -47,6 +48,26 @@ function countFromEnd<T>(items: T[], pred: (x: T) => boolean): number {
   return n;
 }
 
+/**
+ * Map alternate project spellings → canonical name, from `.sprints/projects/*.md`
+ * notes: the filename is the canonical name and its `aliases:` frontmatter lists
+ * the variants. Without notes, names pass through unchanged. (#69)
+ */
+export function loadProjectAliases(repoPath: string): Map<string, string> {
+  const dir = path.join(repoPath, '.sprints', 'projects');
+  const aliases = new Map<string, string>();
+  if (!fs.existsSync(dir)) return aliases;
+
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+    const canonical = entry.name.replace(/\.md$/, '');
+    aliases.set(canonical, canonical);
+    const obj = parseFrontmatterObject(fs.readFileSync(path.join(dir, entry.name), 'utf8'));
+    if (obj) for (const a of fmArray(obj.aliases)) aliases.set(a, canonical);
+  }
+  return aliases;
+}
+
 export function loadSprintRecords(repoPath: string): SprintRecord[] {
   let paths = archiveFiles(repoPath);
   if (paths.length === 0) {
@@ -69,11 +90,11 @@ export function loadSprintRecords(repoPath: string): SprintRecord[] {
         plan_workdays: fmNumber(obj.plan_workdays),
         projects: fmArray(obj.projects),
         improvement_goals: fmArray(obj.improvement_goals),
-        health_goals: fmMap(obj.health_goals),
+        health_goals: normalizeGoalMap(fmMap(obj.health_goals)),
         on_my_mind: fmArray(obj.on_my_mind),
         on_hold: fmArray(obj.on_hold),
         results_improvement: 'results_improvement' in obj ? fmMap(obj.results_improvement) : undefined,
-        results_health: 'results_health' in obj ? fmMap(obj.results_health) : undefined,
+        results_health: 'results_health' in obj ? normalizeGoalMap(fmMap(obj.results_health)) : undefined,
         results_planned: fmNumber(obj.results_planned),
         results_shipped: fmNumber(obj.results_shipped),
       });
@@ -86,7 +107,7 @@ export function loadSprintRecords(repoPath: string): SprintRecord[] {
         date,
         projects: [],
         improvement_goals: p.improvement_goals,
-        health_goals: p.health_goals,
+        health_goals: normalizeGoalMap(p.health_goals),
         on_my_mind: p.on_my_mind,
         on_hold: p.on_hold,
       });
@@ -103,16 +124,19 @@ function consecutiveAge(records: SprintRecord[], pick: (r: SprintRecord) => stri
   return latest.map(item => ({ item, age: countFromEnd(records, r => pick(r).includes(item)) }));
 }
 
-function projectCadence(records: SprintRecord[]): ProjectCadence[] {
+function projectCadence(records: SprintRecord[], aliases: Map<string, string>): ProjectCadence[] {
+  const canon = (name: string): string => aliases.get(name) ?? name;
+  const has = (r: SprintRecord, name: string): boolean => r.projects.some(p => canon(p) === name);
+
   const names = new Set<string>();
-  records.forEach(r => r.projects.forEach(p => names.add(p)));
+  records.forEach(r => r.projects.forEach(p => names.add(canon(p))));
 
   const out: ProjectCadence[] = [];
   for (const name of names) {
     let sprints = 0;
     let lastSeen = '';
-    for (const r of records) if (r.projects.includes(name)) { sprints++; lastSeen = r.date; }
-    out.push({ name, sprints, streak: countFromEnd(records, r => r.projects.includes(name)), lastSeen });
+    for (const r of records) if (has(r, name)) { sprints++; lastSeen = r.date; }
+    out.push({ name, sprints, streak: countFromEnd(records, r => has(r, name)), lastSeen });
   }
 
   return out.sort((a, b) => b.sprints - a.sprints || a.name.localeCompare(b.name));
@@ -126,6 +150,6 @@ export function computeTrends(repoPath: string): Trends {
       on_my_mind: consecutiveAge(sprints, r => r.on_my_mind),
       on_hold: consecutiveAge(sprints, r => r.on_hold),
     },
-    projects: projectCadence(sprints),
+    projects: projectCadence(sprints, loadProjectAliases(repoPath)),
   };
 }

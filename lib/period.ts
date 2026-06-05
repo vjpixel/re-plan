@@ -43,11 +43,13 @@ function countWorkdays(start: Date, end: Date, holidays: Date[]): number {
 }
 
 export function inferCurrentPeriod(today: Date): Period {
-  // Sprints are fixed Mon–Sun calendar weeks. The closing sprint is the most
-  // recently completed Mon–Sun week (end = last Sunday ≤ today).
+  // Sprints are fixed Mon–Sun calendar weeks. The sprint under review is the
+  // week CONTAINING today (end = this week's Sunday, or today if it is Sunday),
+  // so the last-workday (Friday) /sprint-start reviews the week just worked
+  // rather than the previous, already-archived one (#68).
   const dow = today.getDay(); // 0=Sun … 6=Sat
-  const end = addDays(today, -dow); // rewind to Sunday (0 days if today is Sun)
-  const start = addDays(end, -6);   // Monday = Sunday − 6
+  const end = addDays(today, (7 - dow) % 7); // forward to this week's Sunday
+  const start = addDays(end, -6);            // Monday = Sunday − 6
   const holidays = holidaysBetween(start, end);
   return {
     start: toISO(start),

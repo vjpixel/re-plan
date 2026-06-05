@@ -290,3 +290,11 @@ test('parseFrontmatterObject: inline list respects quoted commas', () => {
   assert.ok(o);
   assert.deepEqual(o.projects, ['Diar.ia', 'Bar, Inc', 'Jandig']);
 });
+
+test('loadLatestArchive: normalizes health-goal encoding (>= → ≥) (#70)', () => {
+  const repo = makeTmpRepo();
+  writeArchive(repo, '2026-03-01', '---\nhealth_goals:\n  Sleep Score: "avg >= 80"\non_hold: []\n---\n');
+  const r = loadLatestArchive(repo);
+  assert.ok(r);
+  assert.equal(r.health_goals['Sleep Score'], 'avg ≥ 80');
+});

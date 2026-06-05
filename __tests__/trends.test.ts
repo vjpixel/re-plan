@@ -161,3 +161,24 @@ test('loadSprintRecords: falls back to legacy sprint-final.md when no dated arch
   assert.equal(recs.length, 1);
   assert.deepEqual(recs[0].on_my_mind, ['L']);
 });
+
+test('loadSprintRecords: normalizes health-goal encoding (>= → ≥) (#70)', () => {
+  const r = makeRepo();
+  writeArchive(r, '2026-03-01', `---\nhealth_goals:\n  Sleep Score: "avg >= 80"\non_hold: []\n---\nbody\n`);
+  assert.equal(loadSprintRecords(r)[0].health_goals['Sleep Score'], 'avg ≥ 80');
+});
+
+test('computeTrends: project aliases merge spellings into one cadence row (#69)', () => {
+  const r = makeRepo();
+  fs.mkdirSync(path.join(r, '.sprints', 'projects'), { recursive: true });
+  fs.writeFileSync(
+    path.join(r, '.sprints', 'projects', 'SP Innovation Week.md'),
+    `---\ntype: project\naliases:\n  - SPIW talk\n  - São Paulo Innovation Week\n---\n`,
+  );
+  writeArchive(r, '2026-03-01', `---\nprojects:\n  - São Paulo Innovation Week\non_hold: []\n---\nbody\n`);
+  writeArchive(r, '2026-03-08', `---\nprojects:\n  - SPIW talk\non_hold: []\n---\nbody\n`);
+  const merged = computeTrends(r).projects.filter(p => p.name === 'SP Innovation Week');
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].sprints, 2);
+  assert.equal(merged[0].streak, 2);
+});
