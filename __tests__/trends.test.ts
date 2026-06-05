@@ -1,13 +1,17 @@
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { loadSprintRecords, computeTrends } from '../lib/trends.js';
 
+const tmpDirs: string[] = [];
+after(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
+
 function makeRepo(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-trends-'));
   fs.mkdirSync(path.join(dir, '.sprints', 'archive'), { recursive: true });
+  tmpDirs.push(dir);
   return dir;
 }
 function writeArchive(repo: string, date: string, content: string): void {
@@ -119,9 +123,41 @@ test('computeTrends: project cadence (count, streak, lastSeen)', () => {
   assert.equal(byName['Jandig'].streak, 1); // absent in middle sprint, present in latest
 });
 
-test('computeTrends: empty repo yields zero count', () => {
+test('computeTrends: empty repo yields no sprints', () => {
   const t = computeTrends(makeRepo());
-  assert.equal(t.count, 0);
+  assert.equal(t.sprints.length, 0);
   assert.deepEqual(t.latest_carryover.on_my_mind, []);
   assert.deepEqual(t.projects, []);
+});
+
+test('computeTrends: dedupes duplicate carryover items', () => {
+  const r = makeRepo();
+  writeArchive(r, '2026-02-02', `---\non_my_mind:\n  - X\n  - X\non_hold: []\n---\nbody\n`);
+  const t = computeTrends(r);
+  assert.equal(t.latest_carryover.on_my_mind.length, 1);
+  assert.equal(t.latest_carryover.on_my_mind[0].item, 'X');
+});
+
+test('loadSprintRecords: empty results scalar is undefined, not 0', () => {
+  const r = makeRepo();
+  writeArchive(r, '2026-02-02', `---\nresults_planned: ""\nimprovement_goals: []\n---\nbody\n`);
+  assert.equal(loadSprintRecords(r)[0].results_planned, undefined);
+});
+
+test('loadSprintRecords: includes pre-frontmatter (prose) archives via fallback', () => {
+  const r = makeRepo();
+  writeArchive(r, '2026-02-01', `---\non_my_mind:\n  - X\non_hold: []\n---\nbody\n`);
+  writeArchive(r, '2026-02-08', `## On my mind\nProseItem\n## On hold\n`);
+  const recs = loadSprintRecords(r);
+  assert.equal(recs.length, 2);
+  assert.equal(recs[1].date, '2026-02-08');
+  assert.deepEqual(recs[1].on_my_mind, ['ProseItem']);
+});
+
+test('loadSprintRecords: falls back to legacy sprint-final.md when no dated archives', () => {
+  const r = makeRepo();
+  fs.writeFileSync(path.join(r, '.sprints', 'sprint-final.md'), `---\non_my_mind:\n  - L\non_hold: []\n---\nbody\n`);
+  const recs = loadSprintRecords(r);
+  assert.equal(recs.length, 1);
+  assert.deepEqual(recs[0].on_my_mind, ['L']);
 });

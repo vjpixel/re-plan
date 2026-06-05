@@ -293,7 +293,7 @@ Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All gen
 - **Health goals**: por default carregue as mesmas chaves de `health_goals{}` do archive com as mesmas metas. Só ajuste se o Retrospective sinalizar que vale puxar a meta (ex.: Sleep Score atingido 3 sprints seguidos → propor +2). Sempre propor números concretos — nunca deixar [PENDING].
 - "On my mind" e "On hold": preservar os itens do sprint anterior se não houver indicação de mudança. Com `trends`, anexe a idade (ex.: "Job Hunt — 5 sprints"): item com `age ≥ 3` → propor escalar, mudar abordagem ou dropar, não apenas recarregar
 - Outcomes: propor um resultado concreto por projeto ativo — o que tornaria o sprint bem-sucedido para aquele projeto
-- **Calibrar pela tendência** (`trends`, não só o último sprint): meta batida em `streak` de sprints → propor subir; meta recorrente sem evolução → trocar a forma. Projeto com `streak` alto e sem entregar pode estar travado — rever prioridade ou mover para On Hold
+- **Calibrar pela tendência** (`trends`, não só o último sprint): meta cujos resultados melhoram ao longo da série (`sprints[].results_*`) → propor subir; meta que recorre há vários sprints sem evolução → trocar a forma. Projeto com `streak` alto (campo de `projects[]`) e sem entregar pode estar travado — rever prioridade ou mover para On Hold
 
 **Detecção de projetos bloqueados em terceiros:**
 

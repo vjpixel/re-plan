@@ -270,3 +270,23 @@ body
 test('parseFrontmatterObject: returns null without frontmatter', () => {
   assert.equal(parseFrontmatterObject('# no frontmatter\n'), null);
 });
+
+test('parseFrontmatter: a bare empty planning key still registers (not null)', () => {
+  // Regression (#64 review): the generic rewrite must register `on_my_mind:`
+  // with no children, so frontmatter stays authoritative over stale prose.
+  const r = parseFrontmatter('---\ntype: sprint\non_my_mind:\n---\n');
+  assert.ok(r, 'bare empty planning key must keep frontmatter authoritative');
+  assert.deepEqual(r.on_my_mind, []);
+});
+
+test('parseFrontmatterObject: a populated list ignores a stray map child (no flip)', () => {
+  const o = parseFrontmatterObject('---\non_my_mind:\n  - First\n  stray: x\n---\n');
+  assert.ok(o);
+  assert.deepEqual(o.on_my_mind, ['First']);
+});
+
+test('parseFrontmatterObject: inline list respects quoted commas', () => {
+  const o = parseFrontmatterObject('---\nprojects: [Diar.ia, "Bar, Inc", Jandig]\n---\n');
+  assert.ok(o);
+  assert.deepEqual(o.projects, ['Diar.ia', 'Bar, Inc', 'Jandig']);
+});
