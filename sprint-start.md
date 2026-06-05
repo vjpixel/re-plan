@@ -40,6 +40,14 @@ Aplique `improvement_goals` e `health_goals` no PASSO 4b (avaliação do sprint 
 - Mover de **On hold** para **Projects Priority** se: bloqueador respondeu por email/calendário OU tarefas reativadas em TickTick.
 - Caso contrário, preservar exatamente como veio no JSON.
 
+**Tendências (histórico de todos os sprints).** Rode também — o frontmatter de cada arquivo alimenta isso:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts trends --repo <<REPO_PATH>>
+```
+
+Retorna `sprints[]` (série ascendente: períodos, projetos, goals, results), `latest_carryover` (cada item de On my mind / On hold com `age` = nº de sprints consecutivos) e `projects[]` (cadência: `sprints`, `streak`, `lastSeen`). Aplique no PASSO 4b (contexto de tendência ao lado dos resultados) e no PASSO 4c (calibração de metas, envelhecimento de carryover, cadência de projeto).
+
 ---
 
 ## PASSO 2: Coleta automática de dados
@@ -220,6 +228,7 @@ Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. A
   - "Health goals" → use as chaves de `health_goals{}` exatamente como vieram, com a meta no denominador (ex.: `{"Meditate":"7 days"}` → linha `| Meditate | **[PENDING] / 7 days** |`).
   - Se o archive for `null` (primeiro uso) OU as listas vierem vazias, mantenha as 3 linhas placeholder com `[PENDING] / ?` e adicione nota: "(archive sem metas anteriores — preencher manualmente)".
 - Result column: marque com `[PENDING] / X` quando não conseguir derivar dos dados; o usuário preenche.
+- Se houver `trends` (PASSO 1b), anexe o contexto de tendência ao lado de cada resultado (ex.: `Meditate: 1 → 2 → 4`) — uma meta de improvement que recorre há vários sprints sem evolução é sinal para a seção "What could be improved?".
 - Rascunhar as 3 seções narrativas agora — não deixar como [PENDING]
 - Cada seção narrativa tem exatamente 1 bullet
 - "What did I do well?" foca em melhorias no sistema de trabalho
@@ -282,8 +291,9 @@ Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All gen
 - Usar seção "Projects Priority" (não "Priority order")
 - **Improvements**: por default carregue `improvement_goals[]` do archive (mesmas labels da Retro do PASSO 4b — espelham o ciclo). Só sugira mudanças se o "What will I commit to improving?" da Retro propuser explicitamente uma nova meta — nesse caso, substitua a linha correspondente.
 - **Health goals**: por default carregue as mesmas chaves de `health_goals{}` do archive com as mesmas metas. Só ajuste se o Retrospective sinalizar que vale puxar a meta (ex.: Sleep Score atingido 3 sprints seguidos → propor +2). Sempre propor números concretos — nunca deixar [PENDING].
-- "On my mind" e "On hold": preservar os itens do sprint anterior se não houver indicação de mudança
+- "On my mind" e "On hold": preservar os itens do sprint anterior se não houver indicação de mudança. Com `trends`, anexe a idade (ex.: "Job Hunt — 5 sprints"): item com `age ≥ 3` → propor escalar, mudar abordagem ou dropar, não apenas recarregar
 - Outcomes: propor um resultado concreto por projeto ativo — o que tornaria o sprint bem-sucedido para aquele projeto
+- **Calibrar pela tendência** (`trends`, não só o último sprint): meta batida em `streak` de sprints → propor subir; meta recorrente sem evolução → trocar a forma. Projeto com `streak` alto e sem entregar pode estar travado — rever prioridade ou mover para On Hold
 
 **Detecção de projetos bloqueados em terceiros:**
 

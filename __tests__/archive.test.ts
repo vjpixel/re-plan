@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { latestArchivePath, parsePriorPlanning, parseFrontmatter, loadLatestArchive } from '../lib/archive.js';
+import { latestArchivePath, parsePriorPlanning, parseFrontmatter, parseFrontmatterObject, loadLatestArchive } from '../lib/archive.js';
 
 function makeTmpRepo(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-test-'));
@@ -239,4 +239,34 @@ test('loadLatestArchive: falls back to prose when no frontmatter', () => {
   const r = loadLatestArchive(repo);
   assert.ok(r);
   assert.deepEqual(r.improvement_goals, ['Work +2h', 'Spend 1+ hours OoH', 'Make impact']);
+});
+
+// parseFrontmatterObject (generic reader, #64/#65)
+
+test('parseFrontmatterObject: scalars, block lists, inline lists, nested map', () => {
+  const o = parseFrontmatterObject(`---
+type: sprint
+review_workdays: 5
+projects:
+  - Diar.ia
+  - Jandig
+tags: [a, b]
+empty: []
+health_goals:
+  Meditate: "4 days"
+  Sleep Score: avg ≥ 80
+---
+body
+`);
+  assert.ok(o);
+  assert.equal(o.type, 'sprint');
+  assert.equal(o.review_workdays, '5');
+  assert.deepEqual(o.projects, ['Diar.ia', 'Jandig']);
+  assert.deepEqual(o.tags, ['a', 'b']);
+  assert.deepEqual(o.empty, []);
+  assert.deepEqual(o.health_goals, { Meditate: '4 days', 'Sleep Score': 'avg ≥ 80' });
+});
+
+test('parseFrontmatterObject: returns null without frontmatter', () => {
+  assert.equal(parseFrontmatterObject('# no frontmatter\n'), null);
 });
