@@ -92,64 +92,77 @@ function parseInlineList(val: string): string[] {
   return inner.split(',').map(stripScalar).filter(s => s.length > 0);
 }
 
+export type FrontmatterValue = string | string[] | Record<string, string>;
+
 /**
- * Read the prior sprint's planning fields from leading YAML frontmatter, when
- * present. Returns null if there is no frontmatter or it carries none of the
- * planning keys — callers then fall back to parsePriorPlanning (prose) so old,
- * pre-frontmatter archives keep working. Deliberately a tiny, schema-specific
- * reader (block lists + one nested map + scalars); no YAML dependency.
+ * Parse leading YAML frontmatter into a generic object. Supports the subset the
+ * sprint docs use: scalars, block/inline lists of scalars, and one level of
+ * nested maps (e.g. health_goals, results_*). Returns null when there is no
+ * frontmatter block. Deliberately tiny and schema-shaped — no YAML dependency.
  */
-export function parseFrontmatter(content: string): PriorPlanning | null {
+export function parseFrontmatterObject(content: string): Record<string, FrontmatterValue> | null {
   const m = content.match(/^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
   if (!m) return null;
 
-  const result: PriorPlanning = { on_my_mind: [], on_hold: [], health_goals: {}, improvement_goals: [] };
-  const listFor: Record<string, string[]> = {
-    on_my_mind: result.on_my_mind,
-    on_hold: result.on_hold,
-    improvement_goals: result.improvement_goals,
-  };
-  let sawPlanningKey = false;
-
-  type Collector = { kind: 'list'; arr: string[] } | { kind: 'map'; obj: Record<string, string> } | null;
-  let collector: Collector = null;
+  const obj: Record<string, FrontmatterValue> = {};
+  let pendingKey: string | null = null; // empty-valued key awaiting indented children
 
   for (const rawLine of m[1].split(/\r?\n/)) {
     if (!rawLine.trim() || /^\s*#/.test(rawLine)) continue;
     const indent = rawLine.length - rawLine.replace(/^\s+/, '').length;
     const line = rawLine.trim();
 
-    if (collector && indent > 0) {
-      if (collector.kind === 'list' && line.startsWith('- ')) {
-        collector.arr.push(stripScalar(line.slice(2)));
-        continue;
-      }
-      if (collector.kind === 'map') {
+    if (pendingKey && indent > 0) {
+      if (line.startsWith('- ')) {
+        if (!Array.isArray(obj[pendingKey])) obj[pendingKey] = [];
+        (obj[pendingKey] as string[]).push(stripScalar(line.slice(2)));
+      } else {
         const kv = line.match(/^(.+?):\s*(.*)$/);
-        if (kv) collector.obj[stripScalar(kv[1])] = stripScalar(kv[2]);
-        continue;
+        if (kv) {
+          if (typeof obj[pendingKey] !== 'object' || Array.isArray(obj[pendingKey])) obj[pendingKey] = {};
+          (obj[pendingKey] as Record<string, string>)[stripScalar(kv[1])] = stripScalar(kv[2]);
+        }
       }
+      continue;
     }
 
     const top = indent === 0 ? rawLine.match(/^([A-Za-z_][\w-]*):[ \t]*(.*)$/) : null;
-    collector = null;
+    pendingKey = null;
     if (!top) continue;
 
     const key = top[1];
     const val = top[2].trim();
-
-    if (Object.prototype.hasOwnProperty.call(listFor, key)) {
-      sawPlanningKey = true;
-      const arr = listFor[key];
-      if (val.startsWith('[') && val.endsWith(']')) parseInlineList(val).forEach(x => arr.push(x));
-      else if (val === '') collector = { kind: 'list', arr };
-    } else if (key === 'health_goals') {
-      sawPlanningKey = true;
-      if (val === '') collector = { kind: 'map', obj: result.health_goals };
-    }
+    if (val === '') pendingKey = key;                       // children decide list vs map
+    else if (val === '[]') obj[key] = [];
+    else if (val === '{}') obj[key] = {};
+    else if (val.startsWith('[') && val.endsWith(']')) obj[key] = parseInlineList(val);
+    else obj[key] = stripScalar(val);
   }
 
-  return sawPlanningKey ? result : null;
+  return obj;
+}
+
+/**
+ * Read the prior sprint's planning fields from frontmatter. Returns null if
+ * there is no frontmatter or it carries none of the planning keys, so callers
+ * fall back to parsePriorPlanning (prose) for pre-frontmatter archives (#61).
+ */
+export function parseFrontmatter(content: string): PriorPlanning | null {
+  const obj = parseFrontmatterObject(content);
+  if (!obj) return null;
+  const planningKeys = ['on_my_mind', 'on_hold', 'improvement_goals', 'health_goals'];
+  if (!planningKeys.some(k => Object.prototype.hasOwnProperty.call(obj, k))) return null;
+
+  const arr = (v: FrontmatterValue | undefined): string[] => (Array.isArray(v) ? v : []);
+  const map = (v: FrontmatterValue | undefined): Record<string, string> =>
+    v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+
+  return {
+    on_my_mind: arr(obj.on_my_mind),
+    on_hold: arr(obj.on_hold),
+    improvement_goals: arr(obj.improvement_goals),
+    health_goals: map(obj.health_goals),
+  };
 }
 
 export function loadLatestArchive(repoPath: string): ArchiveContext | null {

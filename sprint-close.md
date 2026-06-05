@@ -68,6 +68,10 @@ Mescle o rascunho com os novos dados:
 - Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes — em **estilo scrum** (bullets curtos e acionáveis; o "commit" é um action item concreto e rastreável, conforme `/sprint-start` PASSO 4b)
 - Ajuste o Sprint Planning se necessário
 - Mantenha o **frontmatter YAML** do topo em sincronia com os valores finais do Planning (`improvement_goals`, `health_goals`, `on_my_mind`, `on_hold`) — é o que o próximo `/sprint-start` lê via `bin/sprint.ts archive`
+- Ao preencher os `[PENDING]` da Retro, grave também os **resultados no frontmatter** (lidos pelo `bin/sprint.ts trends` e pelo dashboard Obsidian):
+  - `results_improvement:` — mapa meta→resultado da tabela "Last week's improvement goals" (ex.: `Stop working by 9 PM: "3/5"`)
+  - `results_health:` — mapa chave→valor real da tabela Health (ex.: `Meditate: "4/4"`, `Sleep Score: "78"`)
+  - opcional: `results_planned: N` e `results_shipped: N` (Outcomes planejados vs. entregues)
 
 **Ao adicionar Outputs/Outcomes**, siga as mesmas regras do `/sprint-start`:
 - **Output language is English.** Outcomes, Outputs, narrativas e tabelas em inglês — traduzir qualquer dado-fonte em português.

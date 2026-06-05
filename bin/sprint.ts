@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { inferCurrentPeriod, nextPeriod } from '../lib/period.js';
 import { loadLatestArchive } from '../lib/archive.js';
+import { computeTrends } from '../lib/trends.js';
 import { readWip, archiveWip } from '../lib/wip.js';
 import { filterAcceptedCalendarEvents, filterRelevantEmails, windowGithubEvents } from '../lib/filters.js';
 
@@ -76,6 +77,11 @@ async function main(): Promise<void> {
 
     case 'archive': {
       out(loadLatestArchive(repoPath()));
+      break;
+    }
+
+    case 'trends': {
+      out(computeTrends(repoPath()));
       break;
     }
 
