@@ -81,6 +81,23 @@ test('cli: archive returns parsed sections from latest archive', () => {
   assert.equal(json.health_goals['Meditate'], '7 days');
 });
 
+// ──────────────────────────── trends ─────────────────────────────
+
+test('cli: trends aggregates archives with carryover age + project cadence', () => {
+  const repo = tmpRepo();
+  const fm = (omm: string) => `---\ntype: sprint\nprojects:\n  - Diar.ia\non_my_mind:\n  - ${omm}\non_hold: []\n---\nbody\n`;
+  fs.writeFileSync(path.join(repo, '.sprints', 'archive', '2026-04-20.md'), fm('Carryover X'));
+  fs.writeFileSync(path.join(repo, '.sprints', 'archive', '2026-04-27.md'), fm('Carryover X'));
+  const r = run(['trends', '--repo', repo]);
+  assert.equal(r.status, 0, r.stderr);
+  const json = JSON.parse(r.stdout);
+  assert.equal(json.sprints.length, 2);
+  assert.equal(json.latest_carryover.on_my_mind[0].item, 'Carryover X');
+  assert.equal(json.latest_carryover.on_my_mind[0].age, 2);
+  const diaria = json.projects.find((p: { name: string }) => p.name === 'Diar.ia');
+  assert.equal(diaria.streak, 2);
+});
+
 // ──────────────────────────── read-wip + archive-wip ─────────────
 
 test('cli: read-wip exits 1 when sprint-wip.md is absent', () => {

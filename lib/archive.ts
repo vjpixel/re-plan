@@ -10,17 +10,27 @@ export interface ArchiveContext {
   improvement_goals: string[];
 }
 
+const ARCHIVE_FILE_RE = /^\d{4}-\d{2}-\d{2}\.md$/;
+
+/** Dated archive files (full paths) sorted ascending by date. Excludes directories. */
+export function archiveFiles(repoPath: string): string[] {
+  const dir = path.join(repoPath, '.sprints', 'archive');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter(d => d.isFile() && ARCHIVE_FILE_RE.test(d.name))
+    .map(d => d.name)
+    .sort()
+    .map(name => path.join(dir, name));
+}
+
+export function legacyArchivePath(repoPath: string): string {
+  return path.join(repoPath, '.sprints', 'sprint-final.md');
+}
+
 export function latestArchivePath(repoPath: string): string | null {
-  const archiveDir = path.join(repoPath, '.sprints', 'archive');
-  const legacy = path.join(repoPath, '.sprints', 'sprint-final.md');
-
-  if (fs.existsSync(archiveDir)) {
-    const files = fs.readdirSync(archiveDir)
-      .filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
-      .sort();
-    if (files.length > 0) return path.join(archiveDir, files[files.length - 1]);
-  }
-
+  const files = archiveFiles(repoPath);
+  if (files.length > 0) return files[files.length - 1];
+  const legacy = legacyArchivePath(repoPath);
   return fs.existsSync(legacy) ? legacy : null;
 }
 
@@ -86,13 +96,33 @@ function stripScalar(s: string): string {
   return t;
 }
 
+/** Split an inline `[a, "b, c", d]` list on top-level commas (quote-aware). */
 function parseInlineList(val: string): string[] {
-  const inner = val.slice(1, -1).trim();
-  if (!inner) return [];
-  return inner.split(',').map(stripScalar).filter(s => s.length > 0);
+  const inner = val.slice(1, -1);
+  const items: string[] = [];
+  let buf = '';
+  let quote = '';
+  for (const ch of inner) {
+    if (quote) { buf += ch; if (ch === quote) quote = ''; }
+    else if (ch === '"' || ch === "'") { quote = ch; buf += ch; }
+    else if (ch === ',') { items.push(buf); buf = ''; }
+    else buf += ch;
+  }
+  items.push(buf);
+  return items.map(stripScalar).filter(s => s.length > 0);
 }
 
 export type FrontmatterValue = string | string[] | Record<string, string>;
+
+// Shared coercions — one home so lib/archive.ts and lib/trends.ts can't diverge.
+export const fmArray = (v?: FrontmatterValue): string[] => (Array.isArray(v) ? v : []);
+export const fmMap = (v?: FrontmatterValue): Record<string, string> =>
+  v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+export const fmNumber = (v?: FrontmatterValue): number | undefined => {
+  if (typeof v !== 'string' || v.trim() === '') return undefined; // '' is "unknown", not 0
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+};
 
 /**
  * Parse leading YAML frontmatter into a generic object. Supports the subset the
@@ -105,7 +135,7 @@ export function parseFrontmatterObject(content: string): Record<string, Frontmat
   if (!m) return null;
 
   const obj: Record<string, FrontmatterValue> = {};
-  let pendingKey: string | null = null; // empty-valued key awaiting indented children
+  let pendingKey: string | null = null; // key awaiting indented children; seeded to [] so it registers
 
   for (const rawLine of m[1].split(/\r?\n/)) {
     if (!rawLine.trim() || /^\s*#/.test(rawLine)) continue;
@@ -113,14 +143,18 @@ export function parseFrontmatterObject(content: string): Record<string, Frontmat
     const line = rawLine.trim();
 
     if (pendingKey && indent > 0) {
+      const cur = obj[pendingKey];
       if (line.startsWith('- ')) {
-        if (!Array.isArray(obj[pendingKey])) obj[pendingKey] = [];
-        (obj[pendingKey] as string[]).push(stripScalar(line.slice(2)));
+        if (Array.isArray(cur)) cur.push(stripScalar(line.slice(2)));
+        // a map was already started under this key → ignore a stray list item
       } else {
         const kv = line.match(/^(.+?):\s*(.*)$/);
         if (kv) {
-          if (typeof obj[pendingKey] !== 'object' || Array.isArray(obj[pendingKey])) obj[pendingKey] = {};
-          (obj[pendingKey] as Record<string, string>)[stripScalar(kv[1])] = stripScalar(kv[2]);
+          const k = stripScalar(kv[1]);
+          const v = stripScalar(kv[2]);
+          if (Array.isArray(cur) && cur.length === 0) obj[pendingKey] = { [k]: v }; // empty seed → first child makes it a map
+          else if (cur && typeof cur === 'object' && !Array.isArray(cur)) (cur as Record<string, string>)[k] = v;
+          // a populated list was already started → ignore a stray map child (don't flip/drop)
         }
       }
       continue;
@@ -132,7 +166,7 @@ export function parseFrontmatterObject(content: string): Record<string, Frontmat
 
     const key = top[1];
     const val = top[2].trim();
-    if (val === '') pendingKey = key;                       // children decide list vs map
+    if (val === '') { pendingKey = key; obj[key] = []; } // register the key; a child may convert it to a map
     else if (val === '[]') obj[key] = [];
     else if (val === '{}') obj[key] = {};
     else if (val.startsWith('[') && val.endsWith(']')) obj[key] = parseInlineList(val);
@@ -153,15 +187,11 @@ export function parseFrontmatter(content: string): PriorPlanning | null {
   const planningKeys = ['on_my_mind', 'on_hold', 'improvement_goals', 'health_goals'];
   if (!planningKeys.some(k => Object.prototype.hasOwnProperty.call(obj, k))) return null;
 
-  const arr = (v: FrontmatterValue | undefined): string[] => (Array.isArray(v) ? v : []);
-  const map = (v: FrontmatterValue | undefined): Record<string, string> =>
-    v && typeof v === 'object' && !Array.isArray(v) ? v : {};
-
   return {
-    on_my_mind: arr(obj.on_my_mind),
-    on_hold: arr(obj.on_hold),
-    improvement_goals: arr(obj.improvement_goals),
-    health_goals: map(obj.health_goals),
+    on_my_mind: fmArray(obj.on_my_mind),
+    on_hold: fmArray(obj.on_hold),
+    improvement_goals: fmArray(obj.improvement_goals),
+    health_goals: fmMap(obj.health_goals),
   };
 }
 

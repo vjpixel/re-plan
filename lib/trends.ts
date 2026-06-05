@@ -1,6 +1,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { parseFrontmatterObject, FrontmatterValue } from './archive.js';
+import {
+  archiveFiles,
+  legacyArchivePath,
+  parseFrontmatterObject,
+  parsePriorPlanning,
+  fmArray,
+  fmMap,
+  fmNumber,
+} from './archive.js';
 
 export interface SprintRecord {
   date: string;
@@ -24,65 +32,75 @@ export interface CarryoverAge { item: string; age: number; }
 export interface ProjectCadence { name: string; sprints: number; streak: number; lastSeen: string; }
 
 export interface Trends {
-  count: number;
   sprints: SprintRecord[]; // ascending by date
   latest_carryover: { on_my_mind: CarryoverAge[]; on_hold: CarryoverAge[] };
   projects: ProjectCadence[];
 }
 
-const asArr = (v: FrontmatterValue | undefined): string[] => (Array.isArray(v) ? v : []);
-const asMap = (v: FrontmatterValue | undefined): Record<string, string> =>
-  v && typeof v === 'object' && !Array.isArray(v) ? v : {};
-const asNum = (v: FrontmatterValue | undefined): number | undefined => {
-  if (typeof v !== 'string') return undefined;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
-};
+/** Count consecutive items from the end that satisfy `pred`, stopping at the first miss. */
+function countFromEnd<T>(items: T[], pred: (x: T) => boolean): number {
+  let n = 0;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (pred(items[i])) n++;
+    else break;
+  }
+  return n;
+}
 
 export function loadSprintRecords(repoPath: string): SprintRecord[] {
-  const archiveDir = path.join(repoPath, '.sprints', 'archive');
-  if (!fs.existsSync(archiveDir)) return [];
+  let paths = archiveFiles(repoPath);
+  if (paths.length === 0) {
+    const legacy = legacyArchivePath(repoPath);
+    if (fs.existsSync(legacy)) paths = [legacy]; // match loadLatestArchive's legacy fallback
+  }
 
   const records: SprintRecord[] = [];
-  const files = fs.readdirSync(archiveDir)
-    .filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
-    .sort(); // ascending by date (YYYY-MM-DD)
+  for (const fp of paths) {
+    const content = fs.readFileSync(fp, 'utf8');
+    const date = path.basename(fp).replace(/\.md$/, '');
+    const obj = parseFrontmatterObject(content);
 
-  for (const f of files) {
-    const obj = parseFrontmatterObject(fs.readFileSync(path.join(archiveDir, f), 'utf8'));
-    if (!obj) continue; // pre-frontmatter archives are skipped from trends
-    records.push({
-      date: f.replace(/\.md$/, ''),
-      review_period: typeof obj.review_period === 'string' ? obj.review_period : undefined,
-      plan_period: typeof obj.plan_period === 'string' ? obj.plan_period : undefined,
-      review_workdays: asNum(obj.review_workdays),
-      plan_workdays: asNum(obj.plan_workdays),
-      projects: asArr(obj.projects),
-      improvement_goals: asArr(obj.improvement_goals),
-      health_goals: asMap(obj.health_goals),
-      on_my_mind: asArr(obj.on_my_mind),
-      on_hold: asArr(obj.on_hold),
-      results_improvement: 'results_improvement' in obj ? asMap(obj.results_improvement) : undefined,
-      results_health: 'results_health' in obj ? asMap(obj.results_health) : undefined,
-      results_planned: asNum(obj.results_planned),
-      results_shipped: asNum(obj.results_shipped),
-    });
+    if (obj) {
+      records.push({
+        date,
+        review_period: typeof obj.review_period === 'string' ? obj.review_period : undefined,
+        plan_period: typeof obj.plan_period === 'string' ? obj.plan_period : undefined,
+        review_workdays: fmNumber(obj.review_workdays),
+        plan_workdays: fmNumber(obj.plan_workdays),
+        projects: fmArray(obj.projects),
+        improvement_goals: fmArray(obj.improvement_goals),
+        health_goals: fmMap(obj.health_goals),
+        on_my_mind: fmArray(obj.on_my_mind),
+        on_hold: fmArray(obj.on_hold),
+        results_improvement: 'results_improvement' in obj ? fmMap(obj.results_improvement) : undefined,
+        results_health: 'results_health' in obj ? fmMap(obj.results_health) : undefined,
+        results_planned: fmNumber(obj.results_planned),
+        results_shipped: fmNumber(obj.results_shipped),
+      });
+    } else {
+      // Pre-frontmatter (prose) archive: keep it in the series via the prose
+      // parser so gaps and "latest" stay consistent with loadLatestArchive,
+      // instead of silently dropping it (which over-counts age/streak).
+      const p = parsePriorPlanning(content);
+      records.push({
+        date,
+        projects: [],
+        improvement_goals: p.improvement_goals,
+        health_goals: p.health_goals,
+        on_my_mind: p.on_my_mind,
+        on_hold: p.on_hold,
+      });
+    }
   }
 
   return records;
 }
 
-/** For the latest sprint's items, count consecutive sprints (from latest back) containing each. */
+/** For the latest sprint's (deduped) items, count consecutive sprints from latest back. */
 function consecutiveAge(records: SprintRecord[], pick: (r: SprintRecord) => string[]): CarryoverAge[] {
   if (records.length === 0) return [];
-  return pick(records[records.length - 1]).map(item => {
-    let age = 0;
-    for (let i = records.length - 1; i >= 0; i--) {
-      if (pick(records[i]).includes(item)) age++;
-      else break;
-    }
-    return { item, age };
-  });
+  const latest = [...new Set(pick(records[records.length - 1]))];
+  return latest.map(item => ({ item, age: countFromEnd(records, r => pick(r).includes(item)) }));
 }
 
 function projectCadence(records: SprintRecord[]): ProjectCadence[] {
@@ -94,12 +112,7 @@ function projectCadence(records: SprintRecord[]): ProjectCadence[] {
     let sprints = 0;
     let lastSeen = '';
     for (const r of records) if (r.projects.includes(name)) { sprints++; lastSeen = r.date; }
-    let streak = 0;
-    for (let i = records.length - 1; i >= 0; i--) {
-      if (records[i].projects.includes(name)) streak++;
-      else break;
-    }
-    out.push({ name, sprints, streak, lastSeen });
+    out.push({ name, sprints, streak: countFromEnd(records, r => r.projects.includes(name)), lastSeen });
   }
 
   return out.sort((a, b) => b.sprints - a.sprints || a.name.localeCompare(b.name));
@@ -108,7 +121,6 @@ function projectCadence(records: SprintRecord[]): ProjectCadence[] {
 export function computeTrends(repoPath: string): Trends {
   const sprints = loadSprintRecords(repoPath);
   return {
-    count: sprints.length,
     sprints,
     latest_carryover: {
       on_my_mind: consecutiveAge(sprints, r => r.on_my_mind),
