@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { latestArchivePath, parsePriorPlanning, loadLatestArchive } from '../lib/archive.js';
+import { latestArchivePath, parsePriorPlanning, parseFrontmatter, loadLatestArchive } from '../lib/archive.js';
 
 function makeTmpRepo(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-test-'));
@@ -168,4 +168,75 @@ test('loadLatestArchive: returns structured data for latest archive', () => {
   assert.deepEqual(result.on_my_mind, ['Verificar status do projeto X', 'Responder email do João']);
   assert.equal(result.health_goals['Sleep Score'], '82');
   assert.deepEqual(result.improvement_goals, ['Work +2h', 'Spend 1+ hours OoH', 'Make impact']);
+});
+
+// parseFrontmatter (frontmatter-as-data, #61)
+
+const SAMPLE_FRONTMATTER = `---
+type: sprint
+review_period: 1/Jun–7/Jun
+review_workdays: 5
+plan_period: 8/Jun–14/Jun
+projects:
+  - Diar.ia
+  - Jandig
+improvement_goals:
+  - Stop working by 9 PM
+  - Make impact
+health_goals:
+  Meditate: 4 days
+  Sleep Score: avg ≥ 80
+on_my_mind:
+  - Job Hunt (awaiting Google's response)
+  - FAPESP proposal
+on_hold: []
+---
+<!-- sprint-wip: 8/Jun–14/Jun -->
+
+## On my mind
+
+Prose value that must be ignored when frontmatter exists
+`;
+
+test('parseFrontmatter: returns null without frontmatter', () => {
+  assert.equal(parseFrontmatter('# just prose\nno frontmatter here\n'), null);
+});
+
+test('parseFrontmatter: returns null when frontmatter has no planning keys', () => {
+  assert.equal(parseFrontmatter('---\ntype: sprint\nreview_workdays: 5\n---\n'), null);
+});
+
+test('parseFrontmatter: parses block lists, nested map, and empty list', () => {
+  const r = parseFrontmatter(SAMPLE_FRONTMATTER);
+  assert.ok(r);
+  assert.deepEqual(r.on_my_mind, ["Job Hunt (awaiting Google's response)", 'FAPESP proposal']);
+  assert.deepEqual(r.on_hold, []);
+  assert.deepEqual(r.improvement_goals, ['Stop working by 9 PM', 'Make impact']);
+  assert.equal(r.health_goals['Meditate'], '4 days');
+  assert.equal(r.health_goals['Sleep Score'], 'avg ≥ 80');
+});
+
+test('parseFrontmatter: supports inline list and inline empty list', () => {
+  const r = parseFrontmatter('---\non_my_mind: [a, b]\non_hold: []\n---\n');
+  assert.ok(r);
+  assert.deepEqual(r.on_my_mind, ['a', 'b']);
+  assert.deepEqual(r.on_hold, []);
+});
+
+test('loadLatestArchive: prefers frontmatter over prose body', () => {
+  const repo = makeTmpRepo();
+  writeArchive(repo, '2026-06-07', SAMPLE_FRONTMATTER);
+  const r = loadLatestArchive(repo);
+  assert.ok(r);
+  assert.equal(r.date, '2026-06-07');
+  assert.deepEqual(r.on_my_mind, ["Job Hunt (awaiting Google's response)", 'FAPESP proposal']);
+  assert.equal(r.health_goals['Sleep Score'], 'avg ≥ 80');
+});
+
+test('loadLatestArchive: falls back to prose when no frontmatter', () => {
+  const repo = makeTmpRepo();
+  writeArchive(repo, '2026-06-07', SAMPLE_PLANNING);
+  const r = loadLatestArchive(repo);
+  assert.ok(r);
+  assert.deepEqual(r.improvement_goals, ['Work +2h', 'Spend 1+ hours OoH', 'Make impact']);
 });
