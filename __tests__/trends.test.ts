@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { loadSprintRecords, computeTrends } from '../lib/trends.js';
+import { loadSprintRecords, computeTrends, loadProjectAliases } from '../lib/trends.js';
 
 const tmpDirs: string[] = [];
 after(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
@@ -181,4 +181,42 @@ test('computeTrends: project aliases merge spellings into one cadence row (#69)'
   assert.equal(merged.length, 1);
   assert.equal(merged[0].sprints, 2);
   assert.equal(merged[0].streak, 2);
+});
+
+test('loadProjectAliases: accepts a scalar (non-list) alias value', () => {
+  const r = makeRepo();
+  fs.mkdirSync(path.join(r, '.sprints', 'projects'), { recursive: true });
+  fs.writeFileSync(path.join(r, '.sprints', 'projects', 'Foo.md'), `---\ntype: project\naliases: Bar\n---\n`);
+  writeArchive(r, '2026-03-01', `---\nprojects:\n  - Bar\non_hold: []\n---\nbody\n`);
+  const foo = computeTrends(r).projects.filter(p => p.name === 'Foo');
+  assert.equal(foo.length, 1);
+  assert.equal(foo[0].sprints, 1);
+});
+
+test('loadProjectAliases: an alias never shadows a real project note', () => {
+  const r = makeRepo();
+  fs.mkdirSync(path.join(r, '.sprints', 'projects'), { recursive: true });
+  fs.writeFileSync(path.join(r, '.sprints', 'projects', 'Beta.md'), `---\ntype: project\n---\n`);
+  fs.writeFileSync(path.join(r, '.sprints', 'projects', 'Zeta.md'), `---\ntype: project\naliases:\n  - Beta\n---\n`);
+  writeArchive(r, '2026-03-01', `---\nprojects:\n  - Beta\non_hold: []\n---\nbody\n`);
+  // "Beta" is a real project note, so a Zeta alias claiming it is ignored — the map
+  // has no "Beta" key, independent of filesystem read order (deterministic guard).
+  assert.equal(loadProjectAliases(r).get('Beta'), undefined);
+  const beta = computeTrends(r).projects.find(p => p.name === 'Beta');
+  assert.ok(beta, 'Beta must remain its own project, not absorbed into Zeta');
+  assert.equal(beta.sprints, 1);
+});
+
+test('loadProjectAliases: same alias on two notes resolves deterministically (sorted first-wins)', () => {
+  const r = makeRepo();
+  fs.mkdirSync(path.join(r, '.sprints', 'projects'), { recursive: true });
+  fs.writeFileSync(path.join(r, '.sprints', 'projects', 'Alpha.md'), `---\ntype: project\naliases:\n  - Shared\n---\n`);
+  fs.writeFileSync(path.join(r, '.sprints', 'projects', 'Bravo.md'), `---\ntype: project\naliases:\n  - Shared\n---\n`);
+  assert.equal(loadProjectAliases(r).get('Shared'), 'Alpha'); // Alpha.md sorts first → wins
+});
+
+test('loadSprintRecords: normalization preserves internal spacing (#70 fix)', () => {
+  const r = makeRepo();
+  writeArchive(r, '2026-03-02', `---\nhealth_goals:\n  Sleep Score: "82  (rested)"\non_hold: []\n---\nbody\n`);
+  assert.equal(loadSprintRecords(r)[0].health_goals['Sleep Score'], '82  (rested)');
 });
