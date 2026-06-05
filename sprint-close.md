@@ -65,7 +65,7 @@ Coletei os dados que faltaram. Agora preciso dos resultados anotados no papel pa
 Mescle o rascunho com os novos dados:
 - Substitua todos os `[PENDING]` pelos valores reais
 - Adicione os novos Outputs/Outcomes do fim de semana
-- Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes
+- Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes — em **estilo scrum** (bullets curtos e acionáveis; o "commit" é um action item concreto e rastreável, conforme `/sprint-start` PASSO 4b)
 - Ajuste o Sprint Planning se necessário
 
 **Ao adicionar Outputs/Outcomes**, siga as mesmas regras do `/sprint-start`:

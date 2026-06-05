@@ -204,15 +204,15 @@ Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. A
 
 ### What did I do well?
 
-* [1 bullet — foco em melhorias no sistema de trabalho: ferramentas, hábitos, processos]
+* [1 bullet curto — melhoria no sistema de trabalho (ferramenta, hábito, processo)]
 
 ### What could be improved?
 
-* [1 bullet — algo estrutural, não uma tarefa esquecida]
+* [1 bullet curto — algo estrutural, não uma tarefa esquecida]
 
 ### What will I commit to improving?
 
-* [1 bullet — compromisso concreto para o próximo sprint]
+* [1 bullet — action item concreto e rastreável (próximo passo claro), não uma descrição]
 ```
 
 - **Tabelas vêm do archive** (PASSO 1b):
@@ -223,6 +223,10 @@ Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. A
 - Rascunhar as 3 seções narrativas agora — não deixar como [PENDING]
 - Cada seção narrativa tem exatamente 1 bullet
 - "What did I do well?" foca em melhorias no sistema de trabalho
+- **Estilo scrum — conciso e acionável:**
+  - Cada bullet = **1 ideia clara, curta e escaneável** (~≤ 1 linha). Evite frases compostas com várias cláusulas/travessões; corte o "porquê" longo e deixe a ação falar.
+  - Frasear de forma **acionável**. Em especial, "What will I commit to improving?" deve ser um **action item concreto e rastreável** — próximo passo claro, idealmente mensurável ou time-boxed — não uma frase descritiva.
+  - Opcional: enquadrar as três seções como **Start / Stop / Continue** quando ajudar a tornar a ação explícita.
 
 Após exibir, pergunte: **"Retro OK? Algo para ajustar?"**
 Aguarde confirmação antes de continuar.
