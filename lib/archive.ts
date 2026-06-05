@@ -124,7 +124,7 @@ export const fmNumber = (v?: FrontmatterValue): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-/** Canonicalize goal-value operators (≥/≤) for cross-sprint comparison; preserves internal spacing (#70). */
+/** Canonicalize goal-value operators (>= → ≥, <= → ≤) and trim; preserves the user's internal spacing (#70). */
 export const normalizeGoalValue = (s: string): string =>
   s.replace(/>=/g, '≥').replace(/<=/g, '≤').trim();
 
