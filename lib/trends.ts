@@ -55,15 +55,25 @@ function countFromEnd<T>(items: T[], pred: (x: T) => boolean): number {
  */
 export function loadProjectAliases(repoPath: string): Map<string, string> {
   const dir = path.join(repoPath, '.sprints', 'projects');
-  const aliases = new Map<string, string>();
+  const aliases = new Map<string, string>(); // variant → canonical (canonical names rely on canon()'s ?? fallback)
   if (!fs.existsSync(dir)) return aliases;
 
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
-    const canonical = entry.name.replace(/\.md$/, '');
-    aliases.set(canonical, canonical);
-    const obj = parseFrontmatterObject(fs.readFileSync(path.join(dir, entry.name), 'utf8'));
-    if (obj) for (const a of fmArray(obj.aliases)) aliases.set(a, canonical);
+  const files = fs.readdirSync(dir, { withFileTypes: true })
+    .filter(e => e.isFile() && e.name.endsWith('.md'))
+    .map(e => e.name)
+    .sort(); // deterministic resolution order, independent of filesystem order
+  const canonicals = new Set(files.map(f => f.replace(/\.md$/, '')));
+
+  for (const name of files) {
+    const canonical = name.replace(/\.md$/, '');
+    const raw = parseFrontmatterObject(fs.readFileSync(path.join(dir, name), 'utf8'))?.aliases;
+    // accept a YAML list OR a single scalar; ignore other shapes
+    const list = Array.isArray(raw) ? raw : typeof raw === 'string' && raw.trim() ? [raw] : [];
+    for (const alias of list) {
+      const a = alias.trim();
+      if (!a || canonicals.has(a)) continue;          // never let an alias shadow a real project note
+      if (!aliases.has(a)) aliases.set(a, canonical); // first (sorted) declaration wins — deterministic
+    }
   }
   return aliases;
 }
@@ -126,17 +136,18 @@ function consecutiveAge(records: SprintRecord[], pick: (r: SprintRecord) => stri
 
 function projectCadence(records: SprintRecord[], aliases: Map<string, string>): ProjectCadence[] {
   const canon = (name: string): string => aliases.get(name) ?? name;
-  const has = (r: SprintRecord, name: string): boolean => r.projects.some(p => canon(p) === name);
+  // canonicalize each sprint's projects once (parallel to `records`)
+  const canonSets = records.map(r => new Set(r.projects.map(canon)));
 
   const names = new Set<string>();
-  records.forEach(r => r.projects.forEach(p => names.add(canon(p))));
+  canonSets.forEach(s => s.forEach(n => names.add(n)));
 
   const out: ProjectCadence[] = [];
   for (const name of names) {
     let sprints = 0;
     let lastSeen = '';
-    for (const r of records) if (has(r, name)) { sprints++; lastSeen = r.date; }
-    out.push({ name, sprints, streak: countFromEnd(records, r => has(r, name)), lastSeen });
+    for (let i = 0; i < records.length; i++) if (canonSets[i].has(name)) { sprints++; lastSeen = records[i].date; }
+    out.push({ name, sprints, streak: countFromEnd(canonSets, s => s.has(name)), lastSeen });
   }
 
   return out.sort((a, b) => b.sprints - a.sprints || a.name.localeCompare(b.name));

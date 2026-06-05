@@ -1,13 +1,17 @@
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { latestArchivePath, parsePriorPlanning, parseFrontmatter, parseFrontmatterObject, loadLatestArchive } from '../lib/archive.js';
 
+const tmpDirs: string[] = [];
+after(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
+
 function makeTmpRepo(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-test-'));
   fs.mkdirSync(path.join(dir, '.sprints', 'archive'), { recursive: true });
+  tmpDirs.push(dir);
   return dir;
 }
 
