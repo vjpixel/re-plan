@@ -73,7 +73,7 @@ up by Git). To keep it backed up and synced across machines, point it at a
 cloud-synced folder (e.g. OneDrive) by adding to `.env`:
 
 ```
-SPRINT_DATA_DIR=C:/Users/you/OneDrive/Documents/Re-plan/data
+SPRINT_DATA_DIR=C:/Users/you/OneDrive/Documents/Re-plan-data
 ```
 
 Then move the existing `.sprints` contents into that folder. Both the CLI
