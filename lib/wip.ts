@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { stripDayPlan } from './document.js';
 
 export interface WipData {
   path: string;
@@ -28,9 +29,14 @@ export function archiveWip(repoPath: string, endDate: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) throw new Error(`Invalid date: ${endDate}`);
   const src = wipPath(repoPath);
   if (!fs.existsSync(src)) throw new Error('sprint-wip.md not found');
+  // Finalize the wip on archive: drop the `## Plano do dia` morning snapshot so
+  // both the archive and the file uploaded to the Google Doc carry only
+  // Review/Retro/Planning. Idempotent — a no-op once the section is gone. (#73)
+  const cleaned = stripDayPlan(fs.readFileSync(src, 'utf8'));
+  fs.writeFileSync(src, cleaned);
   const archiveDir = path.join(repoPath, '.sprints', 'archive');
   fs.mkdirSync(archiveDir, { recursive: true });
   const dest = path.join(archiveDir, `${endDate}.md`);
-  fs.copyFileSync(src, dest);
+  fs.writeFileSync(dest, cleaned);
   return dest;
 }

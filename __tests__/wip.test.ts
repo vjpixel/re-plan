@@ -92,3 +92,26 @@ test('archiveWip: throws when sprint-wip.md does not exist', () => {
   const repo = makeTmpRepo();
   assert.throws(() => archiveWip(repo, '2026-05-03'), /sprint-wip\.md not found/);
 });
+
+test('archiveWip: strips the "Plano do dia" section from archive and wip (#73)', () => {
+  const repo = makeTmpRepo();
+  const wip = `# 5/Jun -------------------------------------
+
+## Plano do dia — 5/Jun (sexta-feira)
+
+Foco: close the week.
+
+## Sprint Review *(27/Abr–3/Mai, 5 workdays)*
+
+### Outcomes
+`;
+  const src = path.join(repo, '.sprints', 'sprint-wip.md');
+  fs.writeFileSync(src, wip);
+  const dest = archiveWip(repo, '2026-05-03');
+
+  for (const file of [dest, src]) {
+    const body = fs.readFileSync(file, 'utf8');
+    assert.doesNotMatch(body, /Plano do dia/, `${file} should not contain the day plan`);
+    assert.match(body, /# 5\/Jun -+\n\n## Sprint Review/, `${file} should join header to review`);
+  }
+});

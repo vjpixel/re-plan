@@ -64,6 +64,7 @@ Coletei os dados que faltaram. Agora preciso dos resultados anotados no papel pa
 
 Mescle o rascunho com os novos dados:
 - Substitua todos os `[PENDING]` pelos valores reais
+- **Remova a seção `## Plano do dia`** (snapshot da manhã, herdado do `/sprint-start`) — o documento fechado deve conter só Review / Retro / Planning. O `archive-wip` (PASSO 6) também remove essa seção automaticamente, então isso é uma rede de segurança (#73)
 - Adicione os novos Outputs/Outcomes do fim de semana
 - Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes — em **estilo scrum** (bullets curtos e acionáveis; o "commit" é um action item concreto e rastreável, conforme `/sprint-start` PASSO 4b)
 - Ajuste o Sprint Planning se necessário
@@ -105,7 +106,7 @@ Após a versão final estar aprovada:
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts archive-wip --repo <<REPO_PATH>> --date YYYY-MM-DD
 ```
 
-O comando cria `.sprints/archive/<DATA>.md` (sobrescreve em reruns do mesmo ciclo — intencional).
+O comando cria `.sprints/archive/<DATA>.md` (sobrescreve em reruns do mesmo ciclo — intencional). Ele também **remove a seção `## Plano do dia`** do `sprint-wip.md` e da cópia arquivada (operação idempotente), garantindo que tanto o arquivo quanto o que sobe pro Google Doc fiquem só com Review / Retro / Planning (#73).
 
 O arquivo arquivado é a **fonte de contexto** que `/sprint-start` (PASSO 1b) lê na próxima sexta para preservar "On my mind", "On hold" e metas de Health entre sprints. Não apague — sobrescrever o `sprint-wip.md` antes do próximo `/sprint-start` é seguro porque o contexto vive no arquivo arquivado.
 
