@@ -14,11 +14,17 @@ const TSX_CJS = createRequire(path.join(REPO_ROOT, 'package.json')).resolve('tsx
 interface RunResult { status: number | null; stdout: string; stderr: string }
 
 function run(args: string[], opts: { input?: string; cwd?: string } = {}): RunResult {
+  // Strip SPRINT_DATA_DIR from the child env so default-path tests are
+  // deterministic even when the dev has it exported in their shell/OS (#74).
+  // The --data test sets it explicitly via the flag inside the child instead.
+  const env = { ...process.env };
+  delete env.SPRINT_DATA_DIR;
   const spawnOpts: SpawnSyncOptionsWithStringEncoding = {
     encoding: 'utf8',
     cwd: opts.cwd ?? REPO_ROOT,
     input: opts.input,
     timeout: 10_000,
+    env,
   };
   const r = spawnSync('node', ['-r', TSX_CJS, SPRINT_BIN, ...args], spawnOpts);
   return { status: r.status, stdout: r.stdout, stderr: r.stderr };
@@ -135,6 +141,30 @@ test('cli: archive-wip rejects bad date format', () => {
   const r = run(['archive-wip', '--repo', repo, '--date', '3-Mai']);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /YYYY-MM-DD/);
+});
+
+test('cli: --data relocates the sprint data dir away from <repo>/.sprints (#74)', () => {
+  const repo = tmpRepo(); // has an empty <repo>/.sprints, no wip
+  const data = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-data-'));
+  fs.writeFileSync(
+    path.join(data, 'sprint-wip.md'),
+    '<!-- sprint-wip: 8/Jun–14/Jun | gerado em: 2026-06-05 -->\nbody\n'
+  );
+
+  // Without --data the wip is not found (repo/.sprints is empty)...
+  const without = run(['read-wip', '--repo', repo]);
+  assert.equal(without.status, 1, 'expected not-found without --data');
+
+  // ...with --data pointing at the relocated dir, it is.
+  const withData = run(['read-wip', '--repo', repo, '--data', data]);
+  assert.equal(withData.status, 0, withData.stderr);
+  assert.equal(JSON.parse(withData.stdout).period, '8/Jun–14/Jun');
+
+  // archive-wip also writes into the relocated dir, not <repo>/.sprints.
+  const arch = run(['archive-wip', '--repo', repo, '--data', data, '--date', '2026-06-07']);
+  assert.equal(arch.status, 0, arch.stderr);
+  assert.ok(fs.existsSync(path.join(data, 'archive', '2026-06-07.md')));
+  assert.ok(!fs.existsSync(path.join(repo, '.sprints', 'archive', '2026-06-07.md')));
 });
 
 // ──────────────────────────── filters via stdin ─────────────────

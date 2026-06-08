@@ -65,6 +65,22 @@ Edit `.env`:
 APPS_SCRIPT_ID=your-script-id-here
 ```
 
+#### Optional: relocate the sprint data (`SPRINT_DATA_DIR`)
+
+By default the sprint data — `sprint-wip.md`, `archive/`, `projects/`, and the
+Obsidian vault — lives in `<repo>/.sprints` (gitignored, so it is **not** backed
+up by Git). To keep it backed up and synced across machines, point it at a
+cloud-synced folder (e.g. OneDrive) by adding to `.env`:
+
+```
+SPRINT_DATA_DIR=C:/Users/you/OneDrive/Documents/Re-plan/data
+```
+
+Then move the existing `.sprints` contents into that folder. Both the CLI
+(`bin/sprint.ts`, which loads `<repo>/.env`) and `upload-sprint.js` honor it; a
+real environment variable or a `--data <path>` CLI flag take precedence. Use
+forward slashes to avoid backslash-escaping surprises in `.env`. (#74)
+
 > **Migrating from `APPS_SCRIPT_DEPLOY_ID`:** if your existing `.env` uses the older variable name, just rename the key to `APPS_SCRIPT_ID`. The value (Script ID) is the same — earlier docs misnamed it as "Deployment ID", but `script.scripts.run` and `script.projects.get` always required the Script ID. See issue #5.
 
 ### Step 6: Install skill files
@@ -115,7 +131,7 @@ On first run, a browser window will open for Google authentication.
 |------|---------|
 | `upload-sprint.js` | Node.js script — reads file and calls Apps Script |
 | `insert-sprint.gs` | Google Apps Script — formats and inserts into Google Doc |
-| `.env` | Local config (`APPS_SCRIPT_ID`) — not committed |
+| `.env` | Local config (`APPS_SCRIPT_ID`, optional `SPRINT_DATA_DIR`) — not committed |
 | `.env.example` | Template for `.env` |
 | `credentials.json` | OAuth 2.0 credentials (create via Google Cloud Console) — not committed |
 | `token.json` | Auto-generated after first auth — not committed |
