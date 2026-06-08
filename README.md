@@ -24,6 +24,8 @@ The process runs in two stages:
 - Asks for paper-tracked data (health, improvement goal results)
 - Delivers the final document ready to copy into your notes
 
+> **Data location.** The sprint data (`sprint-wip.md`, `archive/`, the Obsidian vault) defaults to `.sprints/` inside the repo, which is gitignored. Set `SPRINT_DATA_DIR` in `.env` to relocate it — e.g. a OneDrive-synced folder for backup and sync across machines. See [SETUP.md](SETUP.md) (`SPRINT_DATA_DIR`). (#74)
+
 ## Required MCPs
 
 | Tool | MCP |
