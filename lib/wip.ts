@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { stripDayPlan } from './document.js';
+import { sprintsDir } from './paths.js';
 
 export interface WipData {
   path: string;
@@ -10,7 +11,7 @@ export interface WipData {
 }
 
 function wipPath(repoPath: string): string {
-  return path.join(repoPath, '.sprints', 'sprint-wip.md');
+  return path.join(sprintsDir(repoPath), 'sprint-wip.md');
 }
 
 function parseWipHeader(content: string): { period: string; generated_at: string } {
@@ -34,7 +35,7 @@ export function archiveWip(repoPath: string, endDate: string): string {
   // Review/Retro/Planning. Idempotent — a no-op once the section is gone. (#73)
   const cleaned = stripDayPlan(fs.readFileSync(src, 'utf8'));
   fs.writeFileSync(src, cleaned);
-  const archiveDir = path.join(repoPath, '.sprints', 'archive');
+  const archiveDir = path.join(sprintsDir(repoPath), 'archive');
   fs.mkdirSync(archiveDir, { recursive: true });
   const dest = path.join(archiveDir, `${endDate}.md`);
   fs.writeFileSync(dest, cleaned);

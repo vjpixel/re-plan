@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import * as path from 'node:path';
+import * as dotenv from 'dotenv';
 import { inferCurrentPeriod, nextPeriod } from '../lib/period.js';
 import { loadLatestArchive } from '../lib/archive.js';
 import { computeTrends } from '../lib/trends.js';
@@ -61,6 +63,14 @@ function requireISODate(name: string, value: string | undefined): string {
 }
 
 async function main(): Promise<void> {
+  // Load <repo>/.env so SPRINT_DATA_DIR (data-dir relocation, e.g. a
+  // OneDrive-synced folder) applies to the CLI just like it does to
+  // upload-sprint.js. dotenv never overrides a real env var; an explicit
+  // --data flag wins over both. (#74)
+  dotenv.config({ path: path.join(repoPath(), '.env') });
+  const dataFlag = flag(args, '--data');
+  if (dataFlag) process.env.SPRINT_DATA_DIR = dataFlag;
+
   switch (subcommand) {
     case 'period': {
       const todayStr = flag(args, '--today');

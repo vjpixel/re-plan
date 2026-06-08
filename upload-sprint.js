@@ -1,6 +1,8 @@
-require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+// Load .env from the script's own dir (not cwd) so config is found regardless
+// of where the upload is invoked from.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { google } = require('googleapis');
 const { authenticate } = require('@google-cloud/local-auth');
 
@@ -12,7 +14,12 @@ const SCOPES = [
 
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
 const TOKEN_PATH = path.join(__dirname, 'token.json');
-const SPRINT_FILE_PATH = path.join(__dirname, '.sprints', 'sprint-wip.md');
+// Mirror lib/paths.ts sprintsDir(): SPRINT_DATA_DIR relocates the sprint data
+// (e.g. a OneDrive-synced folder); default to the in-repo .sprints. (#74)
+const DATA_DIR = process.env.SPRINT_DATA_DIR && process.env.SPRINT_DATA_DIR.trim()
+  ? process.env.SPRINT_DATA_DIR
+  : path.join(__dirname, '.sprints');
+const SPRINT_FILE_PATH = path.join(DATA_DIR, 'sprint-wip.md');
 const SCRIPT_ID = process.env.APPS_SCRIPT_ID;
 
 async function loadSavedCredentials() {

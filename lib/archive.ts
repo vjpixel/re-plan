@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { sprintsDir } from './paths.js';
 
 export interface ArchiveContext {
   path: string;
@@ -14,7 +15,7 @@ const ARCHIVE_FILE_RE = /^\d{4}-\d{2}-\d{2}\.md$/;
 
 /** Dated archive files (full paths) sorted ascending by date. Excludes directories. */
 export function archiveFiles(repoPath: string): string[] {
-  const dir = path.join(repoPath, '.sprints', 'archive');
+  const dir = path.join(sprintsDir(repoPath), 'archive');
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir, { withFileTypes: true })
     .filter(d => d.isFile() && ARCHIVE_FILE_RE.test(d.name))
@@ -24,7 +25,7 @@ export function archiveFiles(repoPath: string): string[] {
 }
 
 export function legacyArchivePath(repoPath: string): string {
-  return path.join(repoPath, '.sprints', 'sprint-final.md');
+  return path.join(sprintsDir(repoPath), 'sprint-final.md');
 }
 
 export function latestArchivePath(repoPath: string): string | null {

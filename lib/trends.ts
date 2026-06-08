@@ -10,6 +10,7 @@ import {
   fmNumber,
   normalizeGoalMap,
 } from './archive.js';
+import { sprintsDir } from './paths.js';
 
 export interface SprintRecord {
   date: string;
@@ -54,7 +55,7 @@ function countFromEnd<T>(items: T[], pred: (x: T) => boolean): number {
  * the variants. Without notes, names pass through unchanged. (#69)
  */
 export function loadProjectAliases(repoPath: string): Map<string, string> {
-  const dir = path.join(repoPath, '.sprints', 'projects');
+  const dir = path.join(sprintsDir(repoPath), 'projects');
   const aliases = new Map<string, string>(); // variant → canonical (canonical names rely on canon()'s ?? fallback)
   if (!fs.existsSync(dir)) return aliases;
 
