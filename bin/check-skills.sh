@@ -16,7 +16,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="${1:-$REPO_DIR}"
 
-skills=( "$SRC_DIR/sprint-start.md" "$SRC_DIR/sprint-update.md" "$SRC_DIR/sprint-close.md" )
+skills=( "$SRC_DIR/sprint-start.md" "$SRC_DIR/sprint-update.md" "$SRC_DIR/sprint-close.md" "$SRC_DIR/day-plan.md" "$SRC_DIR/day-wrap.md" )
 
 # ----------------------------------------------------------------------------
 # Check 1: skill files must not embed clone-specific user-home paths.

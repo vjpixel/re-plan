@@ -26,6 +26,20 @@ The process runs in two stages:
 
 > **Data location.** The sprint data (`sprint-wip.md`, `archive/`, the Obsidian vault) defaults to `.sprints/` inside the repo, which is gitignored. Set `SPRINT_DATA_DIR` in `.env` to relocate it — e.g. a OneDrive-synced folder for backup and sync across machines. See [SETUP.md](SETUP.md) (`SPRINT_DATA_DIR`). (#74)
 
+### Daily companions
+
+Two optional daily commands sit alongside the weekly cadence above — neither writes to the sprint document, both read from it:
+
+**`/day-plan`** — Run each morning
+- Clears the TickTick Inbox, lists today's tasks, surfaces overdue ones for triage
+- Pulls today's calendar and suggests time blocks around existing meetings
+- Proposes a single main focus for the day, connected to the active sprint's Projects Priority
+
+**`/day-wrap`** — Run each evening
+- Reviews today's completed tasks, and checks in separately on today's Improvement and Health goals
+- Triages anything left undone, and helps plan tomorrow's tasks and calendar
+- Appends a one-line entry to `day-log.md` (same data directory as `sprint-wip.md`) — a running log meant to make the next `/sprint-start` reconstruction lighter
+
 ## Required MCPs
 
 | Tool | MCP |

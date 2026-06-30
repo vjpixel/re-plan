@@ -9,7 +9,7 @@
     "check-sync": "node build.js --check",
     "install-skills": "bash bin/install-skills.sh",
     "check-skills": "bash bin/check-skills.sh",
-    "test": "node --test __tests__/parser.test.js __tests__/insert.test.js __tests__/skill-checks.test.js && node -r tsx/cjs --test __tests__/period.test.ts __tests__/archive.test.ts __tests__/trends.test.ts __tests__/wip.test.ts __tests__/document.test.ts __tests__/paths.test.ts __tests__/filters.test.ts __tests__/cli.test.ts"
+    "test": "node --test __tests__/parser.test.js __tests__/insert.test.js __tests__/skill-checks.test.js && node -r tsx/cjs --test __tests__/period.test.ts __tests__/archive.test.ts __tests__/trends.test.ts __tests__/wip.test.ts __tests__/document.test.ts __tests__/paths.test.ts __tests__/filters.test.ts __tests__/cli.test.ts __tests__/daylog.test.ts"
   },
   "engines": {
     "node": ">=18"

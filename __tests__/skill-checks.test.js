@@ -20,6 +20,8 @@ function writeFixture(content) {
   fs.writeFileSync(path.join(dir, 'sprint-start.md'), content);
   fs.writeFileSync(path.join(dir, 'sprint-update.md'), '');
   fs.writeFileSync(path.join(dir, 'sprint-close.md'), '');
+  fs.writeFileSync(path.join(dir, 'day-plan.md'), '');
+  fs.writeFileSync(path.join(dir, 'day-wrap.md'), '');
   return dir;
 }
 

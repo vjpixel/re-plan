@@ -33,7 +33,7 @@ if [ ! -f "$REPO_DIR/node_modules/.bin/tsx" ] && [ ! -f "$REPO_DIR/node_modules/
   echo "warning: tsx not found in node_modules. Run 'npm install' before using the skills." >&2
 fi
 
-for f in sprint-start.md sprint-update.md sprint-close.md; do
+for f in sprint-start.md sprint-update.md sprint-close.md day-plan.md day-wrap.md; do
   src="${REPO_DIR}/${f}"
   if [ ! -f "$src" ]; then
     echo "skip ${f} (not found at ${src})" >&2

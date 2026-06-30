@@ -143,6 +143,30 @@ test('cli: archive-wip rejects bad date format', () => {
   assert.match(r.stderr, /YYYY-MM-DD/);
 });
 
+test('cli: append-day-log writes a dated line to day-log.md', () => {
+  const repo = tmpRepo();
+  const r = run(['append-day-log', '--repo', repo, '--date', '2026-06-30'], {
+    input: 'output: shipped X | blocker: none'
+  });
+  assert.equal(r.status, 0, r.stderr);
+  const dest = path.join(repo, '.sprints', 'day-log.md');
+  assert.equal(fs.readFileSync(dest, 'utf8'), '- [2026-06-30]: output: shipped X | blocker: none\n');
+});
+
+test('cli: append-day-log rejects bad date format', () => {
+  const repo = tmpRepo();
+  const r = run(['append-day-log', '--repo', repo, '--date', '30/Jun'], { input: 'x' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /YYYY-MM-DD/);
+});
+
+test('cli: append-day-log rejects empty stdin', () => {
+  const repo = tmpRepo();
+  const r = run(['append-day-log', '--repo', repo, '--date', '2026-06-30'], { input: '   ' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /non-empty line/);
+});
+
 test('cli: --data relocates the sprint data dir away from <repo>/.sprints (#74)', () => {
   const repo = tmpRepo(); // has an empty <repo>/.sprints, no wip
   const data = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-data-'));
