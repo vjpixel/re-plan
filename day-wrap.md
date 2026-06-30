@@ -19,13 +19,13 @@ Execute **sem pedir permissão**:
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts read-wip --repo <<REPO_PATH>>
 ```
 
-Extraia `improvement_goals` do frontmatter retornado. Para cada meta, pergunte se foi cumprida hoje (sim/não). Guarde as respostas para o PASSO 7 (log).
+O retorno tem um campo `content` com o texto bruto do `sprint-wip.md` (frontmatter YAML + corpo) — não é um JSON já estruturado. Leia o bloco `improvement_goals:` dentro desse texto. Para cada meta, pergunte se foi cumprida hoje (sim/não). Guarde as respostas para o PASSO 7 (log).
 
 ---
 
 ## PASSO 3: Health do dia
 
-Do mesmo `read-wip`, extraia `health_goals`. Pergunte **separadamente** de Improvements — uma pergunta por meta de Health (ex.: "Meditou hoje?", "Se exercitou hoje?"). É uma tabela distinta no documento do sprint, não misture com o PASSO 2.
+Do mesmo `content` (não rode `read-wip` de novo), leia o bloco `health_goals:`. Pergunte **separadamente** de Improvements — uma pergunta por meta de Health (ex.: "Meditou hoje?", "Se exercitou hoje?"). É uma tabela distinta no documento do sprint, não misture com o PASSO 2.
 
 ---
 
@@ -49,7 +49,9 @@ Mostre a lista. Pergunte: "Quer incluir ou excluir algo?" Aplique os ajustes.
 Execute **sem pedir permissão**:
 - `gcal_list_events` — amanhã
 
-**Filtro obrigatório** (mesma regra do PASSO 4 do `/day-plan`):
+**Filtro obrigatório.** Passe o resultado por `filter-gcal` ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
+
+Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
@@ -65,15 +67,15 @@ Mostre os eventos confirmados de amanhã. Ajude a encaixar as tarefas do PASSO 5
 
 Pergunte: "Em 1 linha: qual foi o principal output de hoje? Teve algum bloqueio?"
 
-Use o campo `path` retornado pelo `read-wip` do PASSO 2 para achar o diretório de dados (mesmo diretório de `sprint-wip.md`). Acrescente (nunca sobrescreva) uma linha ao arquivo `day-log.md` nesse diretório — crie o arquivo se não existir:
+Monte uma linha juntando a resposta com os resumos dos PASSOs 2 e 3, e grave via `append-day-log` — não use `cat >>`/bash direto, o subcomando já resolve o diretório de dados e evita problemas de quoting com `$`/backticks no texto do usuário:
 
 ```bash
-cat >> "<diretório-de-dados>/day-log.md" <<EOF
-- [DATA]: output: [output do usuário] | blocker: [bloqueio ou "none"] | improvements: [resumo do PASSO 2] | health: [resumo do PASSO 3]
-EOF
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts append-day-log --repo <<REPO_PATH>> --date YYYY-MM-DD <<'TEXT'
+output: [output do usuário] | blocker: [bloqueio ou "none"] | improvements: [resumo do PASSO 2] | health: [resumo do PASSO 3]
+TEXT
 ```
 
-Esse log é o que torna a reconstrução do próximo Sprint Review mais leve — reduz a necessidade de varrer TickTick/Calendar/Gmail/transcripts do zero.
+Substitua `YYYY-MM-DD` pela data de hoje. Esse log (`day-log.md`, mesmo diretório de `sprint-wip.md`) é o que torna a reconstrução do próximo Sprint Review mais leve — reduz a necessidade de varrer TickTick/Calendar/Gmail/transcripts do zero.
 
 ---
 

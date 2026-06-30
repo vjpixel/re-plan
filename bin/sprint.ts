@@ -6,6 +6,7 @@ import { loadLatestArchive } from '../lib/archive.js';
 import { computeTrends } from '../lib/trends.js';
 import { readWip, archiveWip } from '../lib/wip.js';
 import { filterAcceptedCalendarEvents, filterRelevantEmails, windowGithubEvents } from '../lib/filters.js';
+import { appendDayLog } from '../lib/daylog.js';
 
 const [, , subcommand, ...args] = process.argv;
 
@@ -108,6 +109,17 @@ async function main(): Promise<void> {
     case 'archive-wip': {
       const date = requireISODate('--date', flag(args, '--date'));
       out({ archived_to: archiveWip(repoPath(), date) });
+      break;
+    }
+
+    case 'append-day-log': {
+      const date = requireISODate('--date', flag(args, '--date'));
+      const line = (await readStdin()).trim();
+      if (!line) {
+        process.stderr.write('append-day-log requires a non-empty line on stdin\n');
+        process.exit(1);
+      }
+      out({ appended_to: appendDayLog(repoPath(), date, line) });
       break;
     }
 

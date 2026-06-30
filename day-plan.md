@@ -6,7 +6,12 @@ Você é um assistente de planejamento diário — roda toda manhã para organiz
 
 Pergunte ao usuário: "Inbox limpo? (TickTick Inbox + Gmail)"
 
-Se não, liste as tarefas pendentes no Inbox do TickTick (project id: `inbox`) e ajude a triar agora — item a item: mover pra um projeto, agendar, ou descartar — antes de seguir.
+Se a TickTick Inbox não estiver limpa, execute **sem pedir permissão**:
+- `get_project_with_undone_tasks` (TickTick, `project_id: inbox`)
+
+Liste as tarefas pendentes e ajude a triar agora — item a item: mover pra um projeto, agendar, ou descartar — antes de seguir.
+
+Se o Gmail não estiver limpo, pergunte quais emails precisam virar tarefa ou resposta e ajude a transformar cada um numa ação concreta (criar task, responder, arquivar) antes de seguir.
 
 ---
 
@@ -22,7 +27,7 @@ Liste as tarefas de hoje. Pergunte: "Quer ajustar algo? (adicionar, remover, rep
 ## PASSO 3: Tarefas atrasadas
 
 Execute **sem pedir permissão**:
-- `list_undone_tasks_by_date` (TickTick) — últimos 30 dias até hoje
+- `list_undone_tasks_by_date` (TickTick) — últimos 14 dias até hoje (máximo permitido pela ferramenta)
 
 Filtre as que têm `dueDate` anterior a hoje. Para cada uma, pergunte: fazer hoje, reagendar (pedir nova data), ou abandonar (`update_task` com `status: -1`).
 
@@ -33,7 +38,9 @@ Filtre as que têm `dueDate` anterior a hoje. Para cada uma, pergunte: fazer hoj
 Execute **sem pedir permissão**:
 - `gcal_list_events` — hoje
 
-**Filtro obrigatório.** Passe o resultado por `filter-gcal` ANTES de qualquer uso:
+**Filtro obrigatório.** Passe o resultado por `filter-gcal` ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
+
+Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
@@ -45,13 +52,7 @@ Mostre os eventos confirmados de hoje. Com as tarefas do PASSO 2 (já ajustadas)
 
 ---
 
-## PASSO 5: Foco principal (MIT)
-
-Com base nas tarefas e no contexto do sprint (PASSO 6), proponha **1 resultado** que tornaria o dia um sucesso. Pergunte se concorda ou quer trocar.
-
----
-
-## PASSO 6: Contexto do sprint
+## PASSO 5: Contexto do sprint
 
 Execute **sem pedir permissão**:
 
@@ -59,13 +60,19 @@ Execute **sem pedir permissão**:
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts read-wip --repo <<REPO_PATH>>
 ```
 
-Extraia `Projects Priority` e `On my mind` do conteúdo retornado. Mostre brevemente como as tarefas/foco de hoje conectam com a prioridade da semana — ou sinalize se nada do dia está empurrando a prioridade #1 do sprint.
+O retorno tem um campo `content` com o texto bruto do `sprint-wip.md`. Extraia `Projects Priority` e `On my mind` desse texto.
+
+---
+
+## PASSO 6: Foco principal (MIT)
+
+Com base nas tarefas (PASSO 2-4) e na prioridade do sprint (PASSO 5), proponha **1 resultado** que tornaria o dia um sucesso, mostrando como ele conecta com a prioridade #1 da semana — ou sinalize se nada do dia está empurrando essa prioridade. Pergunte se o usuário concorda ou quer trocar.
 
 ---
 
 ## PASSO 7: Goal do dia + papel
 
-Se o foco do PASSO 5 ainda não cobriu isso, pergunte: "Qual é a meta de hoje?"
+Se o foco do PASSO 6 ainda não cobriu isso, pergunte: "Qual é a meta de hoje?"
 
 Depois pergunte: "Pode sincronizar o papel (offline) com essas tarefas agora?" — é só um lembrete, não há ação automatizada aqui.
 
@@ -79,7 +86,7 @@ Exiba um resumo final:
 ## Plano do dia — [DATA]
 
 Foco principal:
-→ [resultado do PASSO 5]
+→ [resultado do PASSO 6]
 
 Prioridades:
 1. [tarefa]
