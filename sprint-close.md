@@ -39,23 +39,25 @@ Use `filter-gmail` da mesma forma. Cada comando lê do stdin e retorna o array f
 
 ## PASSO 3: Dados do papel
 
-Envie em **uma única mensagem**:
+Antes de perguntar qualquer coisa, releia o rascunho já carregado no PASSO 1 (frontmatter + tabelas da Retro) e identifique exatamente o que falta:
+- Os labels dos improvement goals vêm de `improvement_goals[]` do frontmatter — **nunca** use um template genérico com labels fixos que não sejam os que estão de fato no rascunho.
+- O denominador de cada linha é `review_workdays` do frontmatter.
+- Se uma linha da tabela "Last week's improvement goals" ou "Health goals" já tiver um resultado preenchido (não `[PENDING]`), não pergunte de novo — só inclua na mensagem se for genuinamente `[PENDING]` ou estiver faltando.
+- As **"Metas para a semana que começa hoje" não são dados novos** — já são `improvement_goals[]` / `health_goals{}` do frontmatter, escritos pelo `/sprint-start` (PASSO 4c) que gerou este rascunho. Não peça para o usuário redefini-las: apenas quote-as de volta para confirmação.
+
+Envie em **uma única mensagem**, usando os labels/denominadores reais do rascunho e perguntando só pelo que estiver genuinamente pendente:
 
 ---
-Coletei os dados que faltaram. Agora preciso dos resultados anotados no papel para fechar a semana:
+Coletei os dados que faltaram. Só preciso confirmar o que ainda está pendente no rascunho:
 
-**Improvements** (dias cumpridos / total dias úteis do sprint):
-- Work +2h in important outputs: __ / __
-- Spend 1h+ OoH: __ / __
-- Make impact: __ / __
+**Improvements** (dias cumpridos / [review_workdays] dias úteis do sprint) — *liste aqui só as linhas que estão `[PENDING]` no rascunho, com o label exato de `improvement_goals[]`*:
+- [label do improvement_goals[i]]: __ / [review_workdays]
 
-**Health** (resultados reais da semana completa):
-- Meditate: __ / 7
-- Sleep Score (média): __
+**Health** (resultados reais da semana completa) — *liste aqui só as chaves de `health_goals{}` que estão `[PENDING]`*:
+- [chave]: __ / [meta]
 
-**Metas para a semana que começa hoje:**
-- Meditate: __ dias
-- Sleep Score goal: __
+**Metas para a semana que começa hoje** (herdadas do Planning já no rascunho — só para confirmar, não redefinir):
+- [improvement_goals[] e health_goals{} do frontmatter, listados por extenso] — confirma?
 ---
 
 ---
@@ -78,7 +80,9 @@ Mescle o rascunho com os novos dados:
 - **Output language is English.** Outcomes, Outputs, narrativas e tabelas em inglês — traduzir qualquer dado-fonte em português.
 - **Outcome** = o estado do mundo mudou (aprovação recebida, decisão final, conta encerrada). Submeter / enviar / abrir / publicar é **Output**, não Outcome.
 - **Outputs** começam com substantivo, não com verbo. ✗ "Sent resume to Google" → ✓ "Google resume". ✗ "Published 4 editions" → ✓ "4 editions".
-- **Exclusions** (never list): stats/analytics summaries from third parties; incoming emails/replies; calendar events the user did not accept.
+- **Nunca citar números de issue/PR** (ex.: `#2717`, `PR #256`) nos bullets de Output — descreva o artefato/mudança em linguagem simples, sem o número.
+- **diaria-studio**: leia o changelog de PRs merged da janela (`gh pr list --repo vjpixel/diaria-studio --state merged --search "merged:START..END"`) e liste só os **3 mais importantes** — nunca um dump de tudo que aparecer nos dados brutos (transcripts, emails, etc). Ranqueie funcionalidades novas / pipelines desbloqueados acima de fixes incrementais.
+- **Exclusions** (never list): stats/analytics summaries from third parties; incoming emails/replies; calendar events the user did not accept; GitHub issues filed during the session about the sprint tooling itself (Re-plan or any repo) as incidental meta-work.
 - **Timestamp scope** (differs from `/sprint-start`): include work from `generated_at` through today — gap-day work is exactly what `/sprint-close` exists to capture. Do not cap at `current.end`.
 
 Entregue o documento final limpo (sem `[PENDING]`, sem comentários), **no mesmo formato markdown do rascunho** (headers `#`/`##`/`###`, bullets `*`, tabelas com `:----`, listas numeradas para prioridades e outputs) — pronto para copy/paste direto no Google Docs.
@@ -95,7 +99,22 @@ Incorpore o feedback e entregue a versão final pronta para copiar para o Google
 
 ---
 
-## PASSO 6: Salvar e arquivar
+## PASSO 6: Tarefas focadas da semana
+
+Com o Planning já confirmado (Projects Priority + Outcomes), traduza isso num pequeno conjunto de tarefas concretas para a semana:
+
+1. Puxe tarefas abertas relevantes para cada prioridade da semana. Use `filter_tasks` com `projectIds`/`tag` (não `get_project_with_undone_tasks` num projeto grande — pode estourar o limite de tokens da tool call; ex.: Diar.ia com 22 tarefas já gerou 127k+ caracteres). Exclua subtarefas (`parentId` preenchido) da primeira leitura.
+2. **Prioridades que são tags, não projetos** (ex.: Admin = tag `admin` espalhada entre os projetos "Work" e "Personal") precisam de busca por tag cruzando projetos — não assuma um projeto por prioridade.
+3. Não aplique um corte uniforme de "N tarefas" para todas as prioridades. Distinga dois casos:
+   - **Outcome é "fechar uma checklist específica"** (ex.: "Health → todos os exames/consultas agendados") → liste **todas** as tarefas abertas que batem com aquele Outcome, mesmo que sejam muitas — cortar aqui derruba itens que o próprio Outcome exige.
+   - **Prioridade com backlog grande e aberto** (ex.: Diar.ia com dezenas de tarefas soltas) → aplique o mesmo corte de "top 3 por prioridade" usado nos Outputs (ranqueie o que empurra a prioridade da semana).
+4. Antes de propor a lista, verifique se algum item já foi de fato concluído em sessões recentes mesmo que ainda apareça como aberto no TickTick (cruze com o que já foi levantado no PASSO 2 — transcripts, emails, changelogs). TickTick pode estar desatualizado; não presuma que "status aberto" = "ainda não feito".
+5. Proponha o conjunto resultante ao usuário para confirmar, ajustar ou rejeitar — no mesmo espírito de como o day-plan propõe o MIT diário.
+6. Registre o conjunto acordado no documento (nova seção "Focus tasks for the week" dentro do Sprint Planning) para ficar visível durante a semana e ser conferido no próximo `/sprint-close`.
+
+---
+
+## PASSO 7: Salvar e arquivar
 
 Após a versão final estar aprovada:
 

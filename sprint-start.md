@@ -147,6 +147,7 @@ Gere e exiba **apenas o Sprint Review**. Marque campos incompletos com `[PENDING
 - Stats/analytics summaries from third parties (Beehiiv recaps, GitHub star counts) — these are observations, not outputs. May inform the Retro; never the Review.
 - Incoming communications (received emails, replies, DMs) — the user didn't produce these.
 - Calendar events the user did NOT accept (`myResponseStatus !== 'accepted'`) — often other people's schedules shared with the user, not the user's commitments.
+- GitHub issues filed during the session about the sprint tooling itself (Re-plan or any repo) as incidental meta-work — filing a process issue isn't a planned deliverable.
 
 - **Outcomes** = o que mudou no mundo: decisões tomadas, acordos fechados, status alterado, marcos atingidos. Pergunte: *"isso mudou o estado do mundo, ou só produziu um artefato/comunicação?"*. Se só produziu, é Output.
   - Outcomes: aprovação recebida, contratado/aprovado num assessment, conta encerrada, proposta aceita, decisão final tomada.
@@ -155,10 +156,12 @@ Gere e exiba **apenas o Sprint Review**. Marque campos incompletos com `[PENDING
   - **Bullets de Output devem começar com um substantivo (noun phrase), não com verbo.** Remova o verbo introdutório e deixe o artefato/quantidade falar por si.
     - ✗ "Sent resume to Google" → ✓ "Google resume + Hiring Assessment"
     - ✗ "Published 4 editions" → ✓ "4 editions"
-    - ✗ "Opened PR #179: reduce confirmations" → ✓ "PR #179: fewer confirmations in social publishing flow"
+    - ✗ "Opened PR #179: reduce confirmations" → ✓ "Fewer confirmations in social publishing flow"
     - ✗ "Submitted Plano de Capacitação" → ✓ "Plano de Capacitação"
   - Se o item não consegue se sustentar sem o verbo, provavelmente não é output-level.
   - Nunca listar edições individualmente — usar contagem ("4 editions").
+  - **Nunca citar números de issue/PR** (ex.: `#2717`, `PR #256`) nos bullets de Output — descreva o artefato/mudança em linguagem simples, sem o número, mesmo quando o dado-fonte (GitHub, transcripts) vier com o número anexado.
+- **diaria-studio**: leia o changelog de PRs merged da janela (`gh pr list --repo vjpixel/diaria-studio --state merged --search "merged:START..END"`) e liste só os **3 mais importantes** — nunca um dump de tudo que aparecer nos dados brutos. Ranqueie funcionalidades novas / pipelines desbloqueados acima de fixes incrementais.
 - Nunca incluir test sends da Diar.ia
 - Nunca incluir pedidos/entregas Amazon
 
@@ -176,8 +179,8 @@ Exemplo:
 **Diar.ia**
 
 * 4 editions
-* PR #179: fewer confirmations in social publishing flow
-* humanizador: 5 issues refining text humanization spec (padrão #27)
+* Fewer confirmations in social publishing flow
+* humanizador: refined text humanization spec
 ```
 
 Antes de criar uma seção `**X**` nova, verifique se `X` é sub-projeto de algum parent listado acima — se sim, use sub-bullet.
@@ -306,6 +309,21 @@ Se sim, o projeto vai para **On Hold** no Planning, não para Projects Priority.
 
 Após exibir, pergunte: **"Planning OK? Algo para ajustar?"**
 Aguarde confirmação antes de continuar.
+
+---
+
+## PASSO 4d: Tarefas focadas da semana
+
+Com o Planning confirmado (Projects Priority + Outcomes), traduza isso num pequeno conjunto de tarefas concretas para a semana:
+
+1. Puxe tarefas abertas relevantes para cada prioridade da semana. Use `filter_tasks` com `projectIds`/`tag` (não `get_project_with_undone_tasks` num projeto grande — pode estourar o limite de tokens da tool call). Exclua subtarefas (`parentId` preenchido) da primeira leitura.
+2. **Prioridades que são tags, não projetos** (ex.: Admin = tag `admin` espalhada entre vários projetos) precisam de busca por tag cruzando projetos — não assuma um projeto por prioridade.
+3. Não aplique um corte uniforme de "N tarefas" para todas as prioridades. Distinga dois casos:
+   - **Outcome é "fechar uma checklist específica"** → liste **todas** as tarefas abertas que batem com aquele Outcome, mesmo que sejam muitas.
+   - **Prioridade com backlog grande e aberto** → aplique o mesmo corte de "top 3 por prioridade" usado nos Outputs.
+4. Antes de propor a lista, verifique se algum item já foi concluído em sessões recentes mesmo que ainda apareça aberto no TickTick (cruze com o PASSO 2 — transcripts, emails, changelogs). Não presuma que "status aberto" = "ainda não feito".
+5. Proponha o conjunto resultante ao usuário para confirmar, ajustar ou rejeitar — no mesmo espírito de como o day-plan propõe o MIT diário.
+6. Registre o conjunto acordado numa seção "Focus tasks for the week" dentro do Sprint Planning, para o `/sprint-close` conferir depois.
 
 ---
 
