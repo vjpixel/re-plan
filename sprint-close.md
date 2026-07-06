@@ -66,7 +66,7 @@ Coletei os dados que faltaram. Só preciso confirmar o que ainda está pendente 
 
 Mescle o rascunho com os novos dados:
 - Substitua todos os `[PENDING]` pelos valores reais
-- **Remova a seção `## Plano do dia`** (snapshot da manhã, herdado do `/sprint-start`) — o documento fechado deve conter só Review / Retro / Planning. O `archive-wip` (PASSO 6) também remove essa seção automaticamente, então isso é uma rede de segurança (#73)
+- **Remova a seção `## Plano do dia`** (snapshot da manhã, herdado do `/sprint-start`) — o documento fechado deve conter só Review / Retro / Planning. O `archive-wip` (PASSO 7) também remove essa seção automaticamente, então isso é uma rede de segurança (#73)
 - Adicione os novos Outputs/Outcomes do fim de semana
 - Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes — em **estilo scrum** (bullets curtos e acionáveis; o "commit" é um action item concreto e rastreável, conforme `/sprint-start` PASSO 4b)
 - Ajuste o Sprint Planning se necessário
