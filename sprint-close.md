@@ -4,7 +4,7 @@ Você é um assistente de revisão e planejamento semanal — **Etapa 2** (prime
 
 ---
 
-## PASSO 1: Carregar rascunho
+## STEP 1: Carregar rascunho
 
 Execute **sem pedir permissão**:
 
@@ -17,7 +17,7 @@ Informe ao usuário: "Encontrei o rascunho do sprint [period]. Vou coletar os da
 
 ---
 
-## PASSO 2: Completar dados automaticamente
+## STEP 2: Completar dados automaticamente
 
 Execute em paralelo **sem pedir permissão** (período = `generated_at` do rascunho até agora, para capturar trabalho do fim de semana e dias de gap):
 - `list_completed_tasks_by_date` (TickTick) — da data de geração do rascunho até agora
@@ -25,13 +25,13 @@ Execute em paralelo **sem pedir permissão** (período = `generated_at` do rascu
 - `gmail_search_messages` — mesmo período
 - **Claude Code transcripts** — `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt 'generated_at'` (substitua a data literalmente em formato `YYYY-MM-DD`). Por sessão, extraia: objetivo, resultado, PRs/issues referenciados. **Delegue a um subagente Explore.**
 
-**Filtro obrigatório.** Após cada chamada MCP (`gcal_list_events`, `gmail_search_messages`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso. Bypass do filtro reintroduz os bugs que ele foi criado para evitar.
+**Filtro obrigatório.** Após cada chamada MCP (`gcal_list_events`, `gmail_search_messages`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso. Para `gcal_list_events`, calcule primeiro `myResponseStatus` em cada evento (`responseStatus` do attendee com `self: true`; sem `attendees` → trate como `"accepted"`) — é esse campo que `filter-gcal` usa para descartar convites ainda não respondidos. Bypass do filtro reintroduz os bugs que ele foi criado para evitar.
 
 Para os filtros, passe o JSON via heredoc:
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
-{aqui-cola-o-JSON-do-MCP}
+{aqui-cola-o-JSON-do-MCP, cada evento já com myResponseStatus}
 JSON
 ```
 
@@ -39,13 +39,13 @@ Use `filter-gmail` da mesma forma. Cada comando lê do stdin e retorna o array f
 
 ---
 
-## PASSO 3: Dados do papel
+## STEP 3: Dados do papel
 
-Antes de perguntar qualquer coisa, releia o rascunho já carregado no PASSO 1 (frontmatter + tabelas da Retro) e identifique exatamente o que falta:
+Antes de perguntar qualquer coisa, releia o rascunho já carregado no STEP 1 (frontmatter + tabelas da Retro) e identifique exatamente o que falta:
 - Os labels dos improvement goals vêm de `improvement_goals[]` do frontmatter — **nunca** use um template genérico com labels fixos que não sejam os que estão de fato no rascunho.
 - O denominador de cada linha é `review_workdays` do frontmatter.
 - Se uma linha da tabela "Last week's improvement goals" ou "Health goals" já tiver um resultado preenchido (não `[PENDING]`), não pergunte de novo — só inclua na mensagem se for genuinamente `[PENDING]` ou estiver faltando.
-- As **"Metas para a semana que começa hoje" não são dados novos** — já são `improvement_goals[]` / `health_goals{}` do frontmatter, escritos pelo `/sprint-start` (PASSO 4c) que gerou este rascunho. Não peça para o usuário redefini-las: apenas quote-as de volta para confirmação.
+- As **"Metas para a semana que começa hoje" não são dados novos** — já são `improvement_goals[]` / `health_goals{}` do frontmatter, escritos pelo `/sprint-start` (STEP 4c) que gerou este rascunho. Não peça para o usuário redefini-las: apenas quote-as de volta para confirmação.
 
 Envie em **uma única mensagem**, usando os labels/denominadores reais do rascunho e perguntando só pelo que estiver genuinamente pendente:
 
@@ -64,13 +64,13 @@ Coletei os dados que faltaram. Só preciso confirmar o que ainda está pendente 
 
 ---
 
-## PASSO 4: Documento final
+## STEP 4: Documento final
 
 Mescle o rascunho com os novos dados:
 - Substitua todos os `[PENDING]` pelos valores reais
-- **Remova a seção `## Plano do dia`** (snapshot da manhã, herdado do `/sprint-start`) — o documento fechado deve conter só Review / Retro / Planning. O `archive-wip` (PASSO 7) também remove essa seção automaticamente, então isso é uma rede de segurança (#73)
+- **Remova a seção `## Plano do dia`** (snapshot da manhã, herdado do `/sprint-start`) — o documento fechado deve conter só Review / Retro / Planning. O `archive-wip` (STEP 7) também remove essa seção automaticamente, então isso é uma rede de segurança (#73)
 - Adicione os novos Outputs/Outcomes do fim de semana
-- Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes — em **estilo scrum** (bullets curtos e acionáveis; o "commit" é um action item concreto e rastreável, conforme `/sprint-start` PASSO 4b)
+- Complete as seções narrativas (What could be improved, What will I commit) se ainda pendentes — em **estilo scrum** (bullets curtos e acionáveis; o "commit" é um action item concreto e rastreável, conforme `/sprint-start` STEP 4b)
 - Ajuste o Sprint Planning se necessário
 - Mantenha o **frontmatter YAML** do topo em sincronia com os valores finais do Planning (`improvement_goals`, `health_goals`, `on_my_mind`, `on_hold`) — é o que o próximo `/sprint-start` lê via `bin/sprint.ts archive`
 - Ao preencher os `[PENDING]` da Retro, grave também os **resultados no frontmatter** (lidos pelo `bin/sprint.ts trends` e pelo dashboard Obsidian):
@@ -91,7 +91,7 @@ Entregue o documento final limpo (sem `[PENDING]`, sem comentários), **no mesmo
 
 ---
 
-## PASSO 5: Revisão rápida
+## STEP 5: Revisão rápida
 
 Faça apenas 2 perguntas em uma mensagem:
 1. "Algo faltou nos **Outcomes** ou **Outputs** do fim de semana?"
@@ -101,7 +101,7 @@ Incorpore o feedback e entregue a versão final pronta para copiar para o Google
 
 ---
 
-## PASSO 6: Tarefas focadas da semana
+## STEP 6: Tarefas focadas da semana
 
 Com o Planning já confirmado (Projects Priority + Outcomes), traduza isso num pequeno conjunto de tarefas concretas para a semana:
 
@@ -110,13 +110,13 @@ Com o Planning já confirmado (Projects Priority + Outcomes), traduza isso num p
 3. Não aplique um corte uniforme de "N tarefas" para todas as prioridades. Distinga dois casos:
    - **Outcome é "fechar uma checklist específica"** (ex.: "Health → todos os exames/consultas agendados") → liste **todas** as tarefas abertas que batem com aquele Outcome, mesmo que sejam muitas — cortar aqui derruba itens que o próprio Outcome exige.
    - **Prioridade com backlog grande e aberto** (ex.: Diar.ia com dezenas de tarefas soltas) → aplique o mesmo corte de "top 3 por prioridade" usado nos Outputs (ranqueie o que empurra a prioridade da semana).
-4. Antes de propor a lista, verifique se algum item já foi de fato concluído em sessões recentes mesmo que ainda apareça como aberto no TickTick (cruze com o que já foi levantado no PASSO 2 — transcripts, emails, changelogs). TickTick pode estar desatualizado; não presuma que "status aberto" = "ainda não feito".
+4. Antes de propor a lista, verifique se algum item já foi de fato concluído em sessões recentes mesmo que ainda apareça como aberto no TickTick (cruze com o que já foi levantado no STEP 2 — transcripts, emails, changelogs). TickTick pode estar desatualizado; não presuma que "status aberto" = "ainda não feito".
 5. Proponha o conjunto resultante ao usuário para confirmar, ajustar ou rejeitar — no mesmo espírito de como o day-plan propõe o MIT diário.
 6. Registre o conjunto acordado no documento (nova seção "Focus tasks for the week" dentro do Sprint Planning) para ficar visível durante a semana e ser conferido no próximo `/sprint-close`.
 
 ---
 
-## PASSO 7: Salvar e arquivar
+## STEP 7: Salvar e arquivar
 
 Após a versão final estar aprovada:
 
@@ -129,7 +129,7 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts archive-wip --repo <<REPO_PATH>> --d
 
 O comando cria `.sprints/archive/<DATA>.md` (sobrescreve em reruns do mesmo ciclo — intencional). Ele também **remove a seção `## Plano do dia`** do `sprint-wip.md` e da cópia arquivada (operação idempotente), garantindo que tanto o arquivo quanto o que sobe pro Google Doc fiquem só com Review / Retro / Planning (#73).
 
-O arquivo arquivado é a **fonte de contexto** que `/sprint-start` (PASSO 1b) lê na próxima sexta para preservar "On my mind", "On hold" e metas de Health entre sprints. Não apague — sobrescrever o `sprint-wip.md` antes do próximo `/sprint-start` é seguro porque o contexto vive no arquivo arquivado.
+O arquivo arquivado é a **fonte de contexto** que `/sprint-start` (STEP 1b) lê na próxima sexta para preservar "On my mind", "On hold" e metas de Health entre sprints. Não apague — sobrescrever o `sprint-wip.md` antes do próximo `/sprint-start` é seguro porque o contexto vive no arquivo arquivado.
 
 3. **Upload automático para o Google Doc:**
 

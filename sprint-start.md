@@ -4,7 +4,7 @@ Você é um assistente de revisão e planejamento semanal — **Etapa 1** (últi
 
 ---
 
-## PASSO 1: Período do sprint
+## STEP 1: Período do sprint
 
 Execute **sem pedir permissão**, substituindo `YYYY-MM-DD` pela data de hoje:
 
@@ -16,11 +16,11 @@ O JSON retornado contém dois objetos:
 - `current` — sprint atual: `start`, `end`, `workdays`, `holidays[]`
 - `next` — próximo sprint (mesma duração, feriados descontados): mesmos campos
 
-Use `current.*` no header do Sprint Review (PASSO 4a) e `next.*` no header do Sprint Planning (PASSO 4c). O header do Review aparece para o usuário validar — se o período estiver errado, ele corrige durante a revisão.
+Use `current.*` no header do Sprint Review (STEP 4a) e `next.*` no header do Sprint Planning (STEP 4c). O header do Review aparece para o usuário validar — se o período estiver errado, ele corrige durante a revisão.
 
 ---
 
-## PASSO 1b: Contexto do sprint anterior
+## STEP 1b: Contexto do sprint anterior
 
 Execute **sem pedir permissão**:
 
@@ -36,7 +36,7 @@ O retorno é `null` no primeiro uso (sem `.sprints/archive/` ou `sprint-final.md
 - `health_goals{}` — metas de Health anteriores (ex.: `{"Meditate":"7 days","Sleep Score":"82"}`)
 - `improvement_goals[]` — alvos de Improvement anteriores (ex.: `["Work +2h in important outputs", "Spend 1+ hours OoH", "Make impact"]`)
 
-Aplique `improvement_goals` e `health_goals` no PASSO 4b (avaliação do sprint que acabou) e `on_my_mind`, `on_hold`, `health_goals` no PASSO 4c (planejamento do próximo sprint). Itens só são removidos de `on_my_mind` / `on_hold` se houver sinal **explícito** nos dados do PASSO 2 — nunca por inferência genérica:
+Aplique `improvement_goals` e `health_goals` no STEP 4b (avaliação do sprint que acabou) e `on_my_mind`, `on_hold`, `health_goals` no STEP 4c (planejamento do próximo sprint). Itens só são removidos de `on_my_mind` / `on_hold` se houver sinal **explícito** nos dados do STEP 2 — nunca por inferência genérica:
 
 - Remover de **On my mind** se: tarefa concluída em TickTick OU email de decisão/aprovação em Gmail.
 - Mover de **On hold** para **Projects Priority** se: bloqueador respondeu por email/calendário OU tarefas reativadas em TickTick.
@@ -48,11 +48,11 @@ Aplique `improvement_goals` e `health_goals` no PASSO 4b (avaliação do sprint 
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts trends --repo <<REPO_PATH>>
 ```
 
-Retorna `sprints[]` (série ascendente: períodos, projetos, goals, results), `latest_carryover` (cada item de On my mind / On hold com `age` = nº de sprints consecutivos) e `projects[]` (cadência: `sprints`, `streak`, `lastSeen`). Aplique no PASSO 4b (contexto de tendência ao lado dos resultados) e no PASSO 4c (calibração de metas, envelhecimento de carryover, cadência de projeto).
+Retorna `sprints[]` (série ascendente: períodos, projetos, goals, results), `latest_carryover` (cada item de On my mind / On hold com `age` = nº de sprints consecutivos) e `projects[]` (cadência: `sprints`, `streak`, `lastSeen`). Aplique no STEP 4b (contexto de tendência ao lado dos resultados) e no STEP 4c (calibração de metas, envelhecimento de carryover, cadência de projeto).
 
 ---
 
-## PASSO 2: Coleta automática de dados
+## STEP 2: Coleta automática de dados
 
 Execute em paralelo **sem pedir permissão**:
 
@@ -60,7 +60,7 @@ Execute em paralelo **sem pedir permissão**:
 - `list_projects` (TickTick)
 - `gcal_list_calendars` (Google Calendar)
 
-**Lote B** (com IDs em mãos, período = `current.start` a `current.end` do PASSO 1):
+**Lote B** (com IDs em mãos, período = `current.start` a `current.end` do STEP 1):
 - `list_completed_tasks_by_date` (TickTick) — `current.start` até `current.end`
 - `list_undone_tasks_by_date` (TickTick) — tarefas abertas
 - `gcal_list_events` — `current.start` até `current.end`; depois filtre conforme abaixo
@@ -68,13 +68,13 @@ Execute em paralelo **sem pedir permissão**:
 - `gh api "/users/vjpixel/events?per_page=50"` (GitHub); depois filtre conforme abaixo
 - **Claude Code transcripts** — calcule `dayAfterEnd` = dia seguinte a `current.end` em formato `YYYY-MM-DD` (ex.: `current.end=2026-05-03` → `dayAfterEnd=2026-05-04`), então rode (substituindo as duas datas literalmente): `find ~/.claude/projects/ -maxdepth 2 -name "*.jsonl" -newermt 'current.start' ! -newermt 'dayAfterEnd'`. Para cada arquivo top-level, extraia: primeira mensagem do usuário (objetivo), última mensagem do assistente (resultado), PRs/issues referenciados. **Delegue a um subagente Explore** para não poluir o contexto principal.
 
-**Filtro obrigatório.** Após CADA chamada MCP (`gcal_list_events`, `gmail_search_messages`, `gh api events`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
+**Filtro obrigatório.** Após CADA chamada MCP (`gcal_list_events`, `gmail_search_messages`, `gh api events`), passe o resultado pelo subcomando correspondente ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Para `gcal_list_events`, calcule primeiro `myResponseStatus` em cada evento (`responseStatus` do attendee com `self: true`; sem `attendees` → trate como `"accepted"`) — é esse campo que `filter-gcal` usa para descartar convites ainda não respondidos. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
 
 Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
-{aqui-cola-o-JSON-do-MCP}
+{aqui-cola-o-JSON-do-MCP, cada evento já com myResponseStatus}
 JSON
 ```
 
@@ -82,7 +82,7 @@ Use `filter-gmail` (sem flags) e `filter-github --start current.start --end curr
 
 ---
 
-## PASSO 3: Plano do dia
+## STEP 3: Plano do dia
 
 Com os dados coletados, gere o **plano do dia** (hoje):
 
@@ -111,7 +111,7 @@ Baseie os blocos no horário atual e no que o usuário costuma fazer (se tiver c
 
 ---
 
-## PASSO 4a: Sprint Review
+## STEP 4a: Sprint Review
 
 Gere e exiba **apenas o Sprint Review**. Marque campos incompletos com `[PENDING]`.
 
@@ -192,9 +192,9 @@ Aguarde confirmação antes de continuar.
 
 ---
 
-## PASSO 4b: Sprint Retrospective
+## STEP 4b: Sprint Retrospective
 
-Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. All generated content must be in English (see PASSO 4a for the full rule).
+Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. All generated content must be in English (see STEP 4a for the full rule).
 
 ```
 ## Sprint Retrospective *([período], X workdays)*
@@ -228,12 +228,12 @@ Após confirmação do Review, gere e exiba **apenas o Sprint Retrospective**. A
 * [1 bullet — action item concreto e rastreável (próximo passo claro), não uma descrição]
 ```
 
-- **Tabelas vêm do archive** (PASSO 1b):
+- **Tabelas vêm do archive** (STEP 1b):
   - "Last week's improvement goals" → use as 3 linhas de `improvement_goals[]` exatamente como vieram. Não invente nem reuse labels fixos.
   - "Health goals" → use as chaves de `health_goals{}` exatamente como vieram, com a meta no denominador (ex.: `{"Meditate":"7 days"}` → linha `| Meditate | **[PENDING] / 7 days** |`).
   - Se o archive for `null` (primeiro uso) OU as listas vierem vazias, mantenha as 3 linhas placeholder com `[PENDING] / ?` e adicione nota: "(archive sem metas anteriores — preencher manualmente)".
 - Result column: marque com `[PENDING] / X` quando não conseguir derivar dos dados; o usuário preenche.
-- Se houver `trends` (PASSO 1b), anexe o contexto de tendência ao lado de cada resultado (ex.: `Meditate: 1 → 2 → 4`) — uma meta de improvement que recorre há vários sprints sem evolução é sinal para a seção "What could be improved?".
+- Se houver `trends` (STEP 1b), anexe o contexto de tendência ao lado de cada resultado (ex.: `Meditate: 1 → 2 → 4`) — uma meta de improvement que recorre há vários sprints sem evolução é sinal para a seção "What could be improved?".
 - Rascunhar as 3 seções narrativas agora — não deixar como [PENDING]
 - Cada seção narrativa tem exatamente 1 bullet
 - "What did I do well?" foca em melhorias no sistema de trabalho
@@ -247,9 +247,9 @@ Aguarde confirmação antes de continuar.
 
 ---
 
-## PASSO 4c: Sprint Planning
+## STEP 4c: Sprint Planning
 
-Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All generated content must be in English (see PASSO 4a for the full rule).
+Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All generated content must be in English (see STEP 4a for the full rule).
 
 ```
 ## Sprint Planning *([próximo período], X workdays)*
@@ -294,7 +294,7 @@ Após confirmação da Retro, gere e exiba **apenas o Sprint Planning**. All gen
 ```
 
 - Usar seção "Projects Priority" (não "Priority order")
-- **Improvements**: por default carregue `improvement_goals[]` do archive (mesmas labels da Retro do PASSO 4b — espelham o ciclo). Só sugira mudanças se o "What will I commit to improving?" da Retro propuser explicitamente uma nova meta — nesse caso, substitua a linha correspondente.
+- **Improvements**: por default carregue `improvement_goals[]` do archive (mesmas labels da Retro do STEP 4b — espelham o ciclo). Só sugira mudanças se o "What will I commit to improving?" da Retro propuser explicitamente uma nova meta — nesse caso, substitua a linha correspondente.
 - **Health goals**: por default carregue as mesmas chaves de `health_goals{}` do archive com as mesmas metas. Só ajuste se o Retrospective sinalizar que vale puxar a meta (ex.: Sleep Score atingido 3 sprints seguidos → propor +2). Sempre propor números concretos — nunca deixar [PENDING].
 - "On my mind" e "On hold": preservar os itens do sprint anterior se não houver indicação de mudança. Com `trends`, anexe a idade (ex.: "Job Hunt — 5 sprints"): item com `age ≥ 3` → propor escalar, mudar abordagem ou dropar, não apenas recarregar
 - Outcomes: propor um resultado concreto por projeto ativo — o que tornaria o sprint bem-sucedido para aquele projeto
@@ -314,7 +314,7 @@ Aguarde confirmação antes de continuar.
 
 ---
 
-## PASSO 4d: Tarefas focadas da semana
+## STEP 4d: Tarefas focadas da semana
 
 Com o Planning confirmado (Projects Priority + Outcomes), traduza isso num pequeno conjunto de tarefas concretas para a semana:
 
@@ -323,13 +323,13 @@ Com o Planning confirmado (Projects Priority + Outcomes), traduza isso num peque
 3. Não aplique um corte uniforme de "N tarefas" para todas as prioridades. Distinga dois casos:
    - **Outcome é "fechar uma checklist específica"** → liste **todas** as tarefas abertas que batem com aquele Outcome, mesmo que sejam muitas.
    - **Prioridade com backlog grande e aberto** → aplique o mesmo corte de "top 3 por prioridade" usado nos Outputs.
-4. Antes de propor a lista, verifique se algum item já foi concluído em sessões recentes mesmo que ainda apareça aberto no TickTick (cruze com o PASSO 2 — transcripts, emails, changelogs). Não presuma que "status aberto" = "ainda não feito".
+4. Antes de propor a lista, verifique se algum item já foi concluído em sessões recentes mesmo que ainda apareça aberto no TickTick (cruze com o STEP 2 — transcripts, emails, changelogs). Não presuma que "status aberto" = "ainda não feito".
 5. Proponha o conjunto resultante ao usuário para confirmar, ajustar ou rejeitar — no mesmo espírito de como o day-plan propõe o MIT diário.
 6. Registre o conjunto acordado numa seção "Focus tasks for the week" dentro do Sprint Planning, para o `/sprint-close` conferir depois.
 
 ---
 
-## PASSO 5: Salvar rascunho
+## STEP 5: Salvar rascunho
 
 Após confirmação do Planning, salve o documento completo (plano do dia + Review + Retro + Planning) no arquivo `<<REPO_PATH>>/.sprints/sprint-wip.md`.
 
@@ -361,13 +361,13 @@ on_hold: []
 ```
 
 Regras do frontmatter:
-- `improvement_goals`, `health_goals`, `on_my_mind`, `on_hold` = exatamente os valores da seção **Planning** (PASSO 4c) — viram o "archive" lido pelo próximo sprint.
+- `improvement_goals`, `health_goals`, `on_my_mind`, `on_hold` = exatamente os valores da seção **Planning** (STEP 4c) — viram o "archive" lido pelo próximo sprint.
 - Liste vazios como `[]` (nunca omita a chave). Listas em bloco (`- item`); `health_goals` é um mapa aninhado (`Chave: meta`).
 - O bloco `---…---` precede tudo (requisito do Obsidian); o comentário `sprint-wip` e o corpo do doc vêm depois.
 
 ---
 
-## PASSO 6: Confirmar
+## STEP 6: Confirmar
 
 Informe ao usuário:
 - "Rascunho salvo em `.sprints/sprint-wip.md`. Quando quiser fechar o sprint na segunda, use `/sprint-close`."
