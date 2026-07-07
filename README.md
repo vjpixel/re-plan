@@ -69,14 +69,14 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 ## Setup
 
 1. **Install the skill files** with `npm run install-skills` (or `bash bin/install-skills.sh`) — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
-2. **Adapt the project list** — the shipped `sprint-start.md` PASSO 4a/4c includes the maintainer's own projects (Diar.ia, Clarice, Jandig, …) as concrete examples. Replace those project names with your own; the Outputs/Outcomes structure stays.
+2. **Adapt the project list** — the shipped `sprint-start.md` STEP 4a/4c includes the maintainer's own projects (Diar.ia, Clarice, Jandig, …) as concrete examples. Replace those project names with your own; the Outputs/Outcomes structure stays.
 3. **Adjust the improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
 
 For the full Drive-upload setup (OAuth, Apps Script, `.env`), see [SETUP.md](SETUP.md).
 
 ## Document format
 
-The exact structure of the generated document — Review/Retrospective/Planning sections, Outputs/Outcomes rules, table layouts — is defined by the skill files themselves. Rather than mirror it here (and risk drift), see [`sprint-start.md`](sprint-start.md) for the authoritative templates: PASSO 4a (Review), PASSO 4b (Retrospective), and PASSO 4c (Planning).
+The exact structure of the generated document — Review/Retrospective/Planning sections, Outputs/Outcomes rules, table layouts — is defined by the skill files themselves. Rather than mirror it here (and risk drift), see [`sprint-start.md`](sprint-start.md) for the authoritative templates: STEP 4a (Review), STEP 4b (Retrospective), and STEP 4c (Planning).
 
 ## Notes
 
