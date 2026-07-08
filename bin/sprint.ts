@@ -5,7 +5,7 @@ import { inferCurrentPeriod, nextPeriod } from '../lib/period.js';
 import { loadLatestArchive } from '../lib/archive.js';
 import { computeTrends } from '../lib/trends.js';
 import { readWip, archiveWip } from '../lib/wip.js';
-import { filterAcceptedCalendarEvents, filterRelevantEmails, windowGithubEvents } from '../lib/filters.js';
+import { filterAcceptedCalendarEvents, filterRelevantEmails, windowGithubEvents, withMyResponseStatus } from '../lib/filters.js';
 import { appendDayLog } from '../lib/daylog.js';
 
 const [, , subcommand, ...args] = process.argv;
@@ -124,7 +124,7 @@ async function main(): Promise<void> {
     }
 
     case 'filter-gcal': {
-      out(filterAcceptedCalendarEvents(parseStdinArray(await readStdin())));
+      out(filterAcceptedCalendarEvents(withMyResponseStatus(parseStdinArray(await readStdin()))));
       break;
     }
 

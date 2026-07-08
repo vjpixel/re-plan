@@ -12,6 +12,18 @@ function isAmazon(from = '', subject = ''): boolean {
   return AMAZON_PATTERNS.some(p => p.test(from) || p.test(subject));
 }
 
+export function withMyResponseStatus<T extends Record<string, unknown>>(events: T[]): T[] {
+  return events.map(e => {
+    if (typeof e['myResponseStatus'] === 'string') return e;
+    const attendees = e['attendees'];
+    if (Array.isArray(attendees) && attendees.length > 0) {
+      const self = (attendees as Record<string, unknown>[]).find(a => a && a['self'] === true);
+      return { ...e, myResponseStatus: (self?.['responseStatus'] as string) ?? 'needsAction' };
+    }
+    return { ...e, myResponseStatus: 'accepted' };
+  });
+}
+
 export function filterAcceptedCalendarEvents<T extends Record<string, unknown>>(events: T[]): T[] {
   return events.filter(e => e['myResponseStatus'] === 'accepted');
 }
