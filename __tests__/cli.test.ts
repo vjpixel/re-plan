@@ -36,6 +36,13 @@ function tmpRepo(): string {
   return dir;
 }
 
+function writeTempJson(basename: string, data: unknown): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-file-'));
+  const file = path.join(dir, basename);
+  fs.writeFileSync(file, JSON.stringify(data));
+  return file;
+}
+
 // ──────────────────────────── period ────────────────────────────
 
 test('cli: period --today returns current+next JSON to stdout', () => {
@@ -153,6 +160,17 @@ test('cli: append-day-log writes a dated line to day-log.md', () => {
   assert.equal(fs.readFileSync(dest, 'utf8'), '- [2026-06-30]: output: shipped X | blocker: none\n');
 });
 
+test('cli: append-day-log --file reads the line from a file instead of stdin (#105)', () => {
+  const repo = tmpRepo();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-file-'));
+  const file = path.join(dir, 'line.txt');
+  fs.writeFileSync(file, 'output: shipped Y | blocker: none');
+  const r = run(['append-day-log', '--repo', repo, '--date', '2026-06-30', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const dest = path.join(repo, '.sprints', 'day-log.md');
+  assert.equal(fs.readFileSync(dest, 'utf8'), '- [2026-06-30]: output: shipped Y | blocker: none\n');
+});
+
 test('cli: append-day-log rejects bad date format', () => {
   const repo = tmpRepo();
   const r = run(['append-day-log', '--repo', repo, '--date', '30/Jun'], { input: 'x' });
@@ -255,6 +273,49 @@ test('cli: filter-gcal derives myResponseStatus from raw attendees, no precomput
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.deepEqual(out.map((e: { id: string }) => e.id), ['a', 'c']);
+});
+
+test('cli: filter-gcal --file reads JSON from a file instead of stdin (#105)', () => {
+  const file = writeTempJson('events.json', [
+    { id: 'a', myResponseStatus: 'accepted', summary: 'Standup' },
+    { id: 'b', myResponseStatus: 'declined', summary: 'Skip me' },
+  ]);
+  const r = run(['filter-gcal', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.deepEqual(out.map((e: { id: string }) => e.id), ['a']);
+});
+
+test('cli: filter-gmail --file reads JSON from a file instead of stdin (#105)', () => {
+  const file = writeTempJson('msgs.json', [
+    { from: 'noreply@amazon.com.br', subject: 'Pedido enviado' },
+    { from: 'recruiter@google.com', subject: 'Engineer role' },
+  ]);
+  const r = run(['filter-gmail', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].from, 'recruiter@google.com');
+});
+
+test('cli: filter-github --file reads JSON from a file instead of stdin (#105)', () => {
+  const file = writeTempJson('events.json', [
+    { id: 1, created_at: '2026-04-27T10:00:00Z' },
+    { id: 2, created_at: '2026-05-04T00:00:01Z' },
+  ]);
+  const r = run(['filter-github', '--start', '2026-04-27', '--end', '2026-05-03', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.deepEqual(out.map((e: { id: number }) => e.id), [1]);
+});
+
+test('cli: filter-gcal --file rejects a nonexistent path with a clean error, not a raw stack trace', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-file-'));
+  const missing = path.join(dir, 'does-not-exist.json');
+  const r = run(['filter-gcal', '--file', missing]);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Could not read --file/);
+  assert.doesNotMatch(r.stderr, /at Object\.readFileSync/); // no raw Node stack trace
 });
 
 test('cli: filter-gcal rejects non-array stdin with clear error', () => {

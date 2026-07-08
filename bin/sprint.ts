@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as path from 'node:path';
+import * as fs from 'node:fs';
 import * as dotenv from 'dotenv';
 import { inferCurrentPeriod, nextPeriod } from '../lib/period.js';
 import { loadLatestArchive } from '../lib/archive.js';
@@ -38,6 +39,20 @@ async function readStdin(): Promise<string> {
     process.stdin.on('data', c => chunks.push(c));
     process.stdin.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
   });
+}
+
+// Windows/git-bash heredocs can fail with "unexpected EOF" when CRLF line
+// endings break the delimiter match. --file <path> lets callers skip stdin
+// (and heredoc) entirely by writing the JSON to a file first (#105).
+async function readInput(args: string[]): Promise<string> {
+  const filePath = flag(args, '--file');
+  if (!filePath) return readStdin();
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (e) {
+    process.stderr.write(`Could not read --file "${filePath}": ${(e as Error).message}\n`);
+    process.exit(1);
+  }
 }
 
 function parseStdinArray(raw: string): Record<string, unknown>[] {
@@ -114,7 +129,7 @@ async function main(): Promise<void> {
 
     case 'append-day-log': {
       const date = requireISODate('--date', flag(args, '--date'));
-      const line = (await readStdin()).trim();
+      const line = (await readInput(args)).trim();
       if (!line) {
         process.stderr.write('append-day-log requires a non-empty line on stdin\n');
         process.exit(1);
@@ -124,19 +139,19 @@ async function main(): Promise<void> {
     }
 
     case 'filter-gcal': {
-      out(filterAcceptedCalendarEvents(withMyResponseStatus(parseStdinArray(await readStdin()))));
+      out(filterAcceptedCalendarEvents(withMyResponseStatus(parseStdinArray(await readInput(args)))));
       break;
     }
 
     case 'filter-gmail': {
-      out(filterRelevantEmails(parseStdinArray(await readStdin())));
+      out(filterRelevantEmails(parseStdinArray(await readInput(args))));
       break;
     }
 
     case 'filter-github': {
       const start = requireISODate('--start', flag(args, '--start'));
       const end = requireISODate('--end', flag(args, '--end'));
-      out(windowGithubEvents(parseStdinArray(await readStdin()), start, end));
+      out(windowGithubEvents(parseStdinArray(await readInput(args)), start, end));
       break;
     }
 
