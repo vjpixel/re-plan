@@ -74,18 +74,18 @@ Execute em paralelo **sem pedir permissão**:
 
 **Filtro obrigatório.** Após CADA chamada MCP (`gcal_list_events`, `gmail_search_messages`, `gh api events`), passe o resultado bruto pelo subcomando correspondente ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. Para `gcal_list_events`, não precompute nada — `filter-gcal` já deriva `myResponseStatus` internamente a partir de `attendees[].self` (sem `attendees` → trata como `"accepted"`) e descarta o que não for `accepted`. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
 
-Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
+Grave o JSON num arquivo (tool Write) e passe via `--file` — mais confiável que heredoc no Windows/git-bash, onde heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
+```
+
+Alternativa (evita o arquivo intermediário, mas sujeita ao problema de CRLF acima): heredoc via stdin, com aspas simples no delimitador para evitar quoting issues com aspas, backticks, `$`:
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
 {aqui-cola-o-array-de-eventos-do-MCP, sem processamento}
 JSON
-```
-
-Alternativa mais confiável no Windows/git-bash — heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador: grave o JSON num arquivo (tool Write) e use `--file`, sem precisar de stdin/heredoc:
-
-```bash
-node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
 ```
 
 Use `filter-gmail` (sem flags) e `filter-github --start current.start --end current.end` para os outros dois. Cada comando lê do stdin e retorna o array filtrado em stdout.

@@ -46,7 +46,13 @@ async function readStdin(): Promise<string> {
 // (and heredoc) entirely by writing the JSON to a file first (#105).
 async function readInput(args: string[]): Promise<string> {
   const filePath = flag(args, '--file');
-  return filePath ? fs.readFileSync(filePath, 'utf8') : readStdin();
+  if (!filePath) return readStdin();
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (e) {
+    process.stderr.write(`Could not read --file "${filePath}": ${(e as Error).message}\n`);
+    process.exit(1);
+  }
 }
 
 function parseStdinArray(raw: string): Record<string, unknown>[] {
@@ -123,7 +129,7 @@ async function main(): Promise<void> {
 
     case 'append-day-log': {
       const date = requireISODate('--date', flag(args, '--date'));
-      const line = (await readStdin()).trim();
+      const line = (await readInput(args)).trim();
       if (!line) {
         process.stderr.write('append-day-log requires a non-empty line on stdin\n');
         process.exit(1);

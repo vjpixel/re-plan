@@ -60,18 +60,18 @@ Execute **sem pedir permissão**:
 
 **Filtro obrigatório.** Passe o array de eventos bruto do MCP por `filter-gcal` ANTES de qualquer outro uso — inclusive contagem, sumarização ou exibição parcial. O subcomando já deriva `myResponseStatus` internamente a partir de `attendees[].self` (sem `attendees` → trata como `"accepted"`) e descarta tudo que não seja `accepted` — convites ainda não respondidos não entram na lista. Não precompute o campo. Bypass do filtro (ex.: parsear o JSON diretamente em Node one-liner) reintroduz os bugs que o filtro foi criado para evitar.
 
-Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
+Grave o JSON num arquivo (tool Write) e passe via `--file` — mais confiável que heredoc no Windows/git-bash, onde heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
+```
+
+Alternativa (evita o arquivo intermediário, mas sujeita ao problema de CRLF acima): heredoc via stdin, com aspas simples no delimitador para evitar quoting issues com aspas, backticks, `$`:
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
 {aqui-cola-o-array-de-eventos-do-MCP, sem processamento}
 JSON
-```
-
-Alternativa mais confiável no Windows/git-bash — heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador: grave o JSON num arquivo (tool Write) e use `--file`, sem precisar de stdin/heredoc:
-
-```bash
-node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
 ```
 
 Mostre os eventos confirmados de amanhã. Ajude a encaixar as tarefas do STEP 5 nos horários livres — pergunte se quer criar/ajustar blocos.
@@ -93,6 +93,8 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts append-day-log --repo <<REPO_PATH>> 
 output: [output do usuário] | blocker: [bloqueio ou "none"] | improvements: [resumo do STEP 2] | health: [resumo do STEP 3]
 TEXT
 ```
+
+Se o heredoc falhar com `unexpected EOF` (comum no Windows/git-bash por causa de finais de linha CRLF), grave a linha num arquivo (tool Write) e use `--file` em vez de stdin/heredoc: `append-day-log --repo <<REPO_PATH>> --date YYYY-MM-DD --file arquivo.txt`.
 
 Substitua `YYYY-MM-DD` pela data de hoje. Esse log (`day-log.md`, mesmo diretório de `sprint-wip.md`) é o que torna a reconstrução do próximo Sprint Review mais leve — reduz a necessidade de varrer TickTick/Calendar/Gmail/transcripts do zero.
 
