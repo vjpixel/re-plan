@@ -36,7 +36,7 @@ Two optional daily commands sit alongside the weekly cadence above — neither w
 - Proposes a single main focus for the day, connected to the active sprint's Projects Priority
 
 **`/day-wrap`** — Run each evening
-- Reviews today's completed tasks, and checks in separately on today's Improvement and Health goals
+- Reviews today's completed and still-open tasks, and checks in separately on today's Improvement and Health goals
 - Triages anything left undone, and helps plan tomorrow's tasks and calendar
 - Appends a one-line entry to `day-log.md` (same data directory as `sprint-wip.md`) — a running log meant to make the next `/sprint-start` reconstruction lighter
 
