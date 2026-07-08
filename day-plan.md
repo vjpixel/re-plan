@@ -58,10 +58,11 @@ Se o Gmail tiver itens pendentes, liste-os e ajude a transformar cada um numa a�
 Execute **sem pedir permissão**:
 - `list_undone_tasks_by_time_query` (TickTick) — hoje
 - `list_undone_tasks_by_date` (TickTick) — últimos 14 dias até hoje (máximo permitido pela ferramenta)
+- `list_projects` (TickTick) — necessário para resolver o `project_id`/`projectId` de cada tarefa (as duas chamadas acima só retornam o ID) num nome legível, usado na ordenação abaixo
 
 Filtre as atrasadas dentro do segundo resultado (as que têm `dueDate` anterior a hoje).
 
-**Ordene pela prioridade do sprint (STEP 1).** Associe cada tarefa ao projeto/tag do TickTick a que pertence e mostre primeiro as tarefas ligadas ao projeto de maior prioridade, depois o segundo, e assim por diante — tarefas que não batem com nenhum item de Projects Priority vão por último, na ordem original. A correspondência projeto↔prioridade é best-effort por nome (ignore emoji/maiúsculas — ex.: "🩺Health" casa com "Health"); prioridades que são tags espalhadas entre projetos (ex.: "Admin") casam pela tag da tarefa, não pelo projeto.
+**Ordene pela prioridade do sprint (STEP 1).** Associe cada tarefa ao projeto/tag do TickTick a que pertence (usando o nome resolvido via `list_projects`) e mostre primeiro as tarefas ligadas ao projeto de maior prioridade, depois o segundo, e assim por diante — tarefas que não batem com nenhum item de Projects Priority vão por último, na ordem original. A correspondência projeto↔prioridade é best-effort por nome (ignore emoji/maiúsculas — ex.: "🩺Health" casa com "Health"); prioridades que são tags espalhadas entre projetos (ex.: "Admin") casam pela tag da tarefa, não pelo projeto.
 
 Liste juntas as tarefas de hoje e as atrasadas nessa ordem, marcando claramente quais são atrasadas. Para as tarefas de hoje, pergunte: "Quer ajustar algo? (adicionar, remover, repriorizar)" Para cada tarefa atrasada, pergunte: fazer hoje, reagendar (pedir nova data), ou abandonar (`update_task` com `status: -1`). Aplique os ajustes pedidos (`create_task` / `update_task` / `delete_task` conforme o caso).
 

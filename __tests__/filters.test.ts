@@ -20,6 +20,12 @@ test('withMyResponseStatus: treats self-created events with no attendees as acce
   assert.equal(result[0].myResponseStatus, 'accepted');
 });
 
+test('withMyResponseStatus: treats an empty attendees array the same as no attendees (accepted)', () => {
+  const events = [{ id: '1', attendees: [] }];
+  const result = withMyResponseStatus(events);
+  assert.equal(result[0].myResponseStatus, 'accepted');
+});
+
 test('withMyResponseStatus: defaults to needsAction when self is not found in attendees', () => {
   const events = [{ id: '1', attendees: [{ email: 'other@x.com', responseStatus: 'accepted' }] }];
   const result = withMyResponseStatus(events);
@@ -52,7 +58,7 @@ test('filterAcceptedCalendarEvents: returns empty for no accepted', () => {
   assert.equal(filterAcceptedCalendarEvents(events).length, 0);
 });
 
-test('filterAcceptedCalendarEvents: drops events with missing status', () => {
+test('filterAcceptedCalendarEvents: drops events with no myResponseStatus (unit-level; the filter-gcal CLI derives it first via withMyResponseStatus)', () => {
   const events = [{ id: '1' }, { id: '2', myResponseStatus: 'accepted' }];
   const result = filterAcceptedCalendarEvents(events);
   assert.equal(result.length, 1);

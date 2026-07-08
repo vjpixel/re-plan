@@ -16,7 +16,7 @@ export function withMyResponseStatus<T extends Record<string, unknown>>(events: 
   return events.map(e => {
     if (typeof e['myResponseStatus'] === 'string') return e;
     const attendees = e['attendees'];
-    if (Array.isArray(attendees)) {
+    if (Array.isArray(attendees) && attendees.length > 0) {
       const self = (attendees as Record<string, unknown>[]).find(a => a && a['self'] === true);
       return { ...e, myResponseStatus: (self?.['responseStatus'] as string) ?? 'needsAction' };
     }
