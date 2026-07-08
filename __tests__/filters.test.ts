@@ -1,6 +1,36 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { filterAcceptedCalendarEvents, filterRelevantEmails, windowGithubEvents } from '../lib/filters.js';
+import { filterAcceptedCalendarEvents, filterRelevantEmails, windowGithubEvents, withMyResponseStatus } from '../lib/filters.js';
+
+// withMyResponseStatus
+
+test('withMyResponseStatus: derives from attendees[].self', () => {
+  const events = [
+    { id: '1', attendees: [{ email: 'me@x.com', self: true, responseStatus: 'accepted' }, { email: 'other@x.com' }] },
+    { id: '2', attendees: [{ email: 'me@x.com', self: true, responseStatus: 'declined' }] },
+  ];
+  const result = withMyResponseStatus(events);
+  assert.equal(result[0].myResponseStatus, 'accepted');
+  assert.equal(result[1].myResponseStatus, 'declined');
+});
+
+test('withMyResponseStatus: treats self-created events with no attendees as accepted', () => {
+  const events = [{ id: '1' }];
+  const result = withMyResponseStatus(events);
+  assert.equal(result[0].myResponseStatus, 'accepted');
+});
+
+test('withMyResponseStatus: defaults to needsAction when self is not found in attendees', () => {
+  const events = [{ id: '1', attendees: [{ email: 'other@x.com', responseStatus: 'accepted' }] }];
+  const result = withMyResponseStatus(events);
+  assert.equal(result[0].myResponseStatus, 'needsAction');
+});
+
+test('withMyResponseStatus: leaves a precomputed myResponseStatus untouched', () => {
+  const events = [{ id: '1', myResponseStatus: 'tentative', attendees: [{ self: true, responseStatus: 'accepted' }] }];
+  const result = withMyResponseStatus(events);
+  assert.equal(result[0].myResponseStatus, 'tentative');
+});
 
 // filterAcceptedCalendarEvents
 

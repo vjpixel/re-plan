@@ -245,6 +245,18 @@ test('cli: filter-github rejects missing --end flag', () => {
   assert.match(r.stderr, /--end requires YYYY-MM-DD/);
 });
 
+test('cli: filter-gcal derives myResponseStatus from raw attendees, no precompute needed', () => {
+  const events = [
+    { id: 'a', summary: 'Standup', attendees: [{ email: 'me@x.com', self: true, responseStatus: 'accepted' }] },
+    { id: 'b', summary: 'Skip me', attendees: [{ email: 'me@x.com', self: true, responseStatus: 'declined' }] },
+    { id: 'c', summary: 'Self-created, no attendees' },
+  ];
+  const r = run(['filter-gcal'], { input: JSON.stringify(events) });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.deepEqual(out.map((e: { id: string }) => e.id), ['a', 'c']);
+});
+
 test('cli: filter-gcal rejects non-array stdin with clear error', () => {
   const r = run(['filter-gcal'], { input: '{"not":"array"}' });
   assert.equal(r.status, 1);
