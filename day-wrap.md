@@ -36,7 +36,7 @@ Do mesmo `content` (não rode `read-wip` de novo), leia o bloco `health_goals:`.
 
 ## STEP 4: Triagem das tarefas não concluídas
 
-Compare as tarefas planejadas de hoje (do `/day-plan` da manhã, se houver, ou `list_undone_tasks_by_time_query` de hoje) com as concluídas do STEP 1. Para cada tarefa que sobrou, pergunte: empurrar para amanhã, reagendar para outro dia, ou abandonar. Aplique via `update_task` (`status: -1` para abandonar).
+Use a lista de tarefas em aberto já obtida no STEP 1 (não chame `list_undone_tasks_by_time_query` de novo) — ou, se houver, o `/day-plan` da manhã. Para cada tarefa que sobrou, pergunte: empurrar para amanhã, reagendar para outro dia, ou abandonar. Aplique via `update_task` (`status: -1` para abandonar).
 
 ---
 
