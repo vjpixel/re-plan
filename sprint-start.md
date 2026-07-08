@@ -107,7 +107,7 @@ Blocos de tempo sugeridos:
 [HH:MM]–[HH:MM]  [bloco 3 se necessário]
 ```
 
-Baseie os blocos no horário atual e no que o usuário costuma fazer (se tiver contexto de sprints anteriores). Trate **12:30–14:00** como indisponível/almoço sempre — nunca proponha um bloco dentro dessa janela.
+Baseie os blocos no horário atual e no que o usuário costuma fazer (se tiver contexto de sprints anteriores). Trate **12:30–14:00** como indisponível/almoço sempre — nunca proponha um bloco que sobreponha essa janela, mesmo parcialmente.
 
 ---
 

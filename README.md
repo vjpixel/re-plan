@@ -31,6 +31,7 @@ The process runs in two stages:
 Two optional daily commands sit alongside the weekly cadence above — neither writes to the sprint document, both read from it:
 
 **`/day-plan`** — Run each morning
+- Opens with a quick, non-blocking meditation/medicine reminder
 - Clears the TickTick Inbox, lists today's tasks, surfaces overdue ones for triage
 - Pulls today's calendar and suggests time blocks around existing meetings
 - Proposes a single main focus for the day, connected to the active sprint's Projects Priority
