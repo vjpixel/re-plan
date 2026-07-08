@@ -1,6 +1,6 @@
 ## Language
 
-**IMPORTANT:** Estas instruções estão em português apenas para quem as edita — responda ao usuário **sempre em inglês**, mesmo que ele escreva em português. Ao persistir texto (sprint-wip, day-log), traduza para inglês antes de gravar; não persista texto em português.
+**IMPORTANT:** Estas instruções estão em português apenas para quem as edita — responda ao usuário **sempre em inglês**, mesmo que ele escreva em português. Ao persistir texto redigido pelo assistente (day-log, sprint-wip), traduza para inglês antes de gravar; não persista texto em português. Exceção: títulos de tasks no TickTick — preserve exatamente como o usuário digitou, não traduza.
 
 ---
 
@@ -31,7 +31,7 @@ Execute em paralelo **sem pedir permissão** (período = `generated_at` do rascu
 
 **Filtro obrigatório.** Após cada chamada MCP (`gcal_list_events`, `gmail_search_messages`), passe o resultado bruto pelo subcomando correspondente ANTES de qualquer outro uso. Para `gcal_list_events`, não precompute nada — `filter-gcal` já deriva `myResponseStatus` internamente a partir de `attendees[].self` (sem `attendees` → trata como `"accepted"`) e descarta o que não for `accepted`. Bypass do filtro reintroduz os bugs que ele foi criado para evitar.
 
-Para os filtros, passe o JSON via heredoc:
+Passe o JSON via heredoc (evita quoting issues com aspas, backticks, `$`):
 
 ```bash
 node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
@@ -39,7 +39,11 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
 JSON
 ```
 
-Se o heredoc falhar com `unexpected EOF` (comum no Windows/git-bash, geralmente por causa de finais de linha CRLF quebrando o delimitador), use o fallback: grave o JSON num arquivo com a tool Write e rode `node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal < arquivo.json`.
+Alternativa mais confiável no Windows/git-bash — heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador: grave o JSON num arquivo (tool Write) e use `--file`, sem precisar de stdin/heredoc:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
+```
 
 Use `filter-gmail` da mesma forma. Cada comando lê do stdin e retorna o array filtrado em stdout.
 

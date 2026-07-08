@@ -68,7 +68,11 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
 JSON
 ```
 
-Se o heredoc falhar com `unexpected EOF` (comum no Windows/git-bash, geralmente por causa de finais de linha CRLF quebrando o delimitador), use o fallback: grave o JSON num arquivo com a tool Write e rode `node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal < arquivo.json`.
+Alternativa mais confiável no Windows/git-bash — heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador: grave o JSON num arquivo (tool Write) e use `--file`, sem precisar de stdin/heredoc:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
+```
 
 Mostre os eventos confirmados de amanhã. Ajude a encaixar as tarefas do STEP 5 nos horários livres — pergunte se quer criar/ajustar blocos.
 

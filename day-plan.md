@@ -83,7 +83,11 @@ node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal <<'JSON'
 JSON
 ```
 
-Se o heredoc falhar com `unexpected EOF` (comum no Windows/git-bash, geralmente por causa de finais de linha CRLF quebrando o delimitador), use o fallback: grave o JSON num arquivo com a tool Write e rode `node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal < arquivo.json`.
+Alternativa mais confiável no Windows/git-bash — heredocs podem falhar com `unexpected EOF` por causa de finais de linha CRLF quebrando o delimitador: grave o JSON num arquivo (tool Write) e use `--file`, sem precisar de stdin/heredoc:
+
+```bash
+node -r tsx/cjs <<REPO_PATH>>/bin/sprint.ts filter-gcal --file arquivo.json
+```
 
 Mostre os eventos confirmados de hoje. Com as tarefas do STEP 3 (já ajustadas, na ordem de prioridade) e os horários livres entre eventos, sugira blocos de tempo para as 1–3 tarefas mais importantes — em caso de empate de urgência, prefira a tarefa ligada ao projeto de maior prioridade do sprint (STEP 1) — sem sobrepor os eventos já confirmados. Pergunte se quer criar/ajustar esses blocos no calendário.
 

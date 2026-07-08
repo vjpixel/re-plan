@@ -257,6 +257,46 @@ test('cli: filter-gcal derives myResponseStatus from raw attendees, no precomput
   assert.deepEqual(out.map((e: { id: string }) => e.id), ['a', 'c']);
 });
 
+test('cli: filter-gcal --file reads JSON from a file instead of stdin (#105)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-file-'));
+  const file = path.join(dir, 'events.json');
+  const events = [
+    { id: 'a', myResponseStatus: 'accepted', summary: 'Standup' },
+    { id: 'b', myResponseStatus: 'declined', summary: 'Skip me' },
+  ];
+  fs.writeFileSync(file, JSON.stringify(events));
+  const r = run(['filter-gcal', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.deepEqual(out.map((e: { id: string }) => e.id), ['a']);
+});
+
+test('cli: filter-gmail --file reads JSON from a file instead of stdin (#105)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-file-'));
+  const file = path.join(dir, 'msgs.json');
+  const msgs = [
+    { from: 'noreply@amazon.com.br', subject: 'Pedido enviado' },
+    { from: 'recruiter@google.com', subject: 'Engineer role' },
+  ];
+  fs.writeFileSync(file, JSON.stringify(msgs));
+  const r = run(['filter-gmail', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].from, 'recruiter@google.com');
+});
+
+test('cli: filter-github --file reads JSON from a file instead of stdin (#105)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 're-plan-cli-file-'));
+  const file = path.join(dir, 'events.json');
+  const events = [{ id: 1, created_at: '2026-04-27T10:00:00Z' }, { id: 2, created_at: '2026-05-04T00:00:01Z' }];
+  fs.writeFileSync(file, JSON.stringify(events));
+  const r = run(['filter-github', '--start', '2026-04-27', '--end', '2026-05-03', '--file', file]);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.deepEqual(out.map((e: { id: number }) => e.id), [1]);
+});
+
 test('cli: filter-gcal rejects non-array stdin with clear error', () => {
   const r = run(['filter-gcal'], { input: '{"not":"array"}' });
   assert.equal(r.status, 1);
