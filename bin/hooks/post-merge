@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Re-materialize skill files into ~/.claude/commands after a merge/pull, so
+# the installed copies never drift from the repo (see issue #108).
+set -euo pipefail
+
+exec bash "$(dirname "${BASH_SOURCE[0]}")/_resync.sh" "post-merge"

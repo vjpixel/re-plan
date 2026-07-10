@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Same purpose as bin/hooks/post-merge, but for branch switches. Git passes
+# post-checkout three args: previous HEAD, new HEAD, and a flag that's 1 for
+# a branch checkout and 0 for a plain file checkout — skip the latter.
+set -euo pipefail
+
+[ "${3:-0}" = "1" ] || exit 0
+
+exec bash "$(dirname "${BASH_SOURCE[0]}")/_resync.sh" "post-checkout"
