@@ -29,9 +29,9 @@ trap 'rm -rf "$fresh"' EXIT
 bash "$REPO_DIR/bin/install-skills.sh" "$fresh" >/dev/null
 
 stale=()
-for f in sprint-start.md sprint-update.md sprint-close.md day-plan.md day-wrap.md; do
-  expected="${fresh}/${f}"
+for expected in "$fresh"/*.md; do
   [ -f "$expected" ] || continue
+  f="$(basename "$expected")"
 
   actual="${INSTALLED_DIR}/${f}"
   if [ ! -f "$actual" ] || ! diff -q "$expected" "$actual" >/dev/null 2>&1; then

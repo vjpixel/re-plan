@@ -6,6 +6,4 @@ set -euo pipefail
 
 [ "${3:-0}" = "1" ] || exit 0
 
-REPO_DIR="$(git rev-parse --show-toplevel)"
-bash "$REPO_DIR/bin/install-skills.sh" >/dev/null
-echo "post-checkout: skill files re-synced to ~/.claude/commands"
+exec bash "$(dirname "${BASH_SOURCE[0]}")/_resync.sh" "post-checkout"

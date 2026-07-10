@@ -69,7 +69,7 @@ See [SETUP.md](SETUP.md) for complete configuration instructions.
 
 ## Setup
 
-1. **Install the skill files** with `npm run install-skills` (or `bash bin/install-skills.sh`) — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. `npm install` also wires up git hooks (`post-merge`/`post-checkout`) that re-run this automatically after a pull or branch switch, so the installed copies don't drift from the repo — run `npm run check-installed-skills` if you want to double-check they're in sync. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
+1. **Install the skill files** with `npm run install-skills` (or `bash bin/install-skills.sh`) — the script substitutes the `<<REPO_PATH>>` placeholder with your clone's path and writes the result to `~/.claude/commands/`. `npm install` also wires up git hooks (`post-merge`/`post-checkout`) that re-run this automatically after every pull or branch switch **from then on** — but that only takes effect once `npm install` (or `npm run setup-hooks`) has actually run on your clone, so run it once after pulling any change that touches the skill files. Run `npm run check-installed-skills` any time you want to double-check they're in sync. See [SETUP.md → Step 6](SETUP.md#step-6-install-skill-files) for details.
 2. **Adapt the project list** — the shipped `sprint-start.md` STEP 4a/4c includes the maintainer's own projects (Diar.ia, Clarice, Jandig, …) as concrete examples. Replace those project names with your own; the Outputs/Outcomes structure stays.
 3. **Adjust the improvement goals** if yours differ from the defaults (`Work +2h`, `OoH`, `Make impact`).
 

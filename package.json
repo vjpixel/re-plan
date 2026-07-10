@@ -10,8 +10,8 @@
     "install-skills": "bash bin/install-skills.sh",
     "check-skills": "bash bin/check-skills.sh",
     "check-installed-skills": "bash bin/check-installed-skills.sh",
-    "setup-hooks": "bash bin/setup-hooks.sh",
-    "postinstall": "bash bin/setup-hooks.sh || true",
+    "setup-hooks": "node bin/setup-hooks.js",
+    "postinstall": "node bin/setup-hooks.js --soft",
     "test": "node --test __tests__/parser.test.js __tests__/insert.test.js __tests__/skill-checks.test.js __tests__/skill-sync.test.js && node -r tsx/cjs --test __tests__/period.test.ts __tests__/archive.test.ts __tests__/trends.test.ts __tests__/wip.test.ts __tests__/document.test.ts __tests__/paths.test.ts __tests__/filters.test.ts __tests__/cli.test.ts __tests__/daylog.test.ts __tests__/skill-consistency.test.ts"
   },
   "engines": {

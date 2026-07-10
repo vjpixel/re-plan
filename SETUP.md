@@ -101,7 +101,9 @@ The script:
 - Writes the materialized result to `~/.claude/commands/` (default)
 - Replaces any pre-existing symlink at the destination with a real file (avoids the placeholder reaching Claude Code through a back-link to the repo)
 
-**This re-syncs automatically after that.** `npm install` also runs `bin/setup-hooks.sh`, which points git's `core.hooksPath` at the repo-tracked `bin/hooks/` — so `post-merge` (after `git pull`/merge) and `post-checkout` (after switching branches) re-run `install-skills.sh` for you. If you ever suspect the installed copies have drifted (e.g. you edited a skill file without pulling/checking out), run `npm run check-installed-skills` to compare them against the repo and get a list of what's stale. See issue #108.
+**This re-syncs automatically from now on.** `npm install` also runs `bin/setup-hooks.js` (`postinstall`), which points git's `core.hooksPath` at the repo-tracked `bin/hooks/` — so `post-merge` (after `git pull`/merge) and `post-checkout` (after switching branches) re-run `install-skills.sh` for you.
+
+That auto-sync only exists *after* the hooks are wired up, though — if you already had this repo cloned before `bin/hooks/` and this `postinstall` script existed, a plain `git pull` alone won't activate it (`postinstall` only fires on an explicit `npm install`/`npm ci`). Run `npm install` (or `npm run setup-hooks`) once after pulling this to bootstrap it; every pull/checkout after that self-syncs. If you ever suspect the installed copies have drifted (e.g. hooks were never wired up, or you edited a skill file without pulling/checking out), run `npm run check-installed-skills` to compare them against the repo and get a list of what's stale. See issue #108.
 
 ### Step 7: Run the Workflow
 
