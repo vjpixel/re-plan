@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Re-materialize skill files into ~/.claude/commands after a merge/pull, so
+# the installed copies never drift from the repo (see issue #108).
+# install-skills.sh is cheap and idempotent, so we just always re-run it
+# rather than diffing to decide whether a skill file actually changed.
+set -euo pipefail
+
+REPO_DIR="$(git rev-parse --show-toplevel)"
+bash "$REPO_DIR/bin/install-skills.sh" >/dev/null
+echo "post-merge: skill files re-synced to ~/.claude/commands"
